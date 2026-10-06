@@ -1,0 +1,6 @@
+{
+  "name": "ARYA AI - Academic Readiness & Youth Analytics",
+  "description": "Unified academic intelligence and placement readiness platform connecting students, faculty mentors, T&P officers, recruiters, and university administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
