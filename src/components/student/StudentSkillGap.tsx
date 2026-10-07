@@ -9,13 +9,14 @@ interface Props {
 }
 
 export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => {
-  const [targetRole, setTargetRole] = useState(student.Target_Role || 'Full-Stack Software Engineer');
   const careerPaths = readinessService.getCareerPathRecommendations(student);
-  const selectedPath = careerPaths.find((p) => p.title === targetRole) || careerPaths[0];
+  const roleFromProfile = careerPaths.some((path) => path.title === student.Target_Role) ? student.Target_Role : undefined;
+  const [targetRole, setTargetRole] = useState(roleFromProfile || 'Full-Stack Software Engineer');
+  const selectedPath = careerPaths.find((p) => p.title === targetRole);
   const gaps = readinessService.getSkillGaps(student, targetRole);
 
-  const missingCount = selectedPath.studentMissingSkills.length;
-  const matchPercent = selectedPath.matchScore;
+  const missingCount = selectedPath?.studentMissingSkills.length ?? 0;
+  const matchPercent = selectedPath?.matchScore ?? 0;
 
   return (
     <div className="space-y-6 max-w-5xl transition-colors">
@@ -24,13 +25,15 @@ export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => 
         <div>
           <h2 className="text-xl font-bold text-[#263238] dark:text-[#F1F5F9]">Skill-Gap Diagnostic Engine</h2>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-0.5">
-            Compares your demonstrated competencies against current corporate recruitment benchmarks.
+            Compares recorded technical skills against a small role reference catalog. Missing means not recorded in your profile; this is not a trained model or hiring benchmark.
           </p>
         </div>
 
         {/* Role Selector */}
         <div className="flex items-center gap-2 text-xs">
-          <label className="text-[#687572] dark:text-[#94A3B8] font-medium shrink-0">Target Role:</label>
+          <label className="text-[#687572] dark:text-[#94A3B8] font-medium shrink-0">
+            Target Role{roleFromProfile ? ':' : ' (default: Full-Stack Software Engineer):'}
+          </label>
           <select
             value={targetRole}
             onChange={(e) => setTargetRole(e.target.value)}
@@ -55,7 +58,7 @@ export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => 
             {targetRole}
           </div>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] max-w-xl">
-            {selectedPath.overview}
+            {selectedPath?.overview ?? 'Add technical skills to your profile to see role alignment.'}
           </p>
         </div>
 
@@ -79,12 +82,12 @@ export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => 
           <div className="flex items-center justify-between border-b border-[#E4ECEA] dark:border-[#1F333A] pb-3">
             <h3 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-[#2EA396] dark:text-[#58BDB2]" />
-              <span>Validated Matching Skills ({selectedPath.studentMatchingSkills.length})</span>
+              <span>Matching Skills Listed ({selectedPath?.studentMatchingSkills.length ?? 0})</span>
             </h3>
           </div>
 
           <div className="space-y-2">
-            {selectedPath.studentMatchingSkills.length === 0 ? (
+            {!selectedPath || selectedPath.studentMatchingSkills.length === 0 ? (
               <p className="text-xs text-[#687572] dark:text-[#94A3B8] italic p-2">
                 No matching skills found yet for this target role. Add skills in your profile.
               </p>
@@ -109,14 +112,14 @@ export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => 
           <div className="flex items-center justify-between border-b border-[#E4ECEA] dark:border-[#1F333A] pb-3">
             <h3 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>Identified Gaps to Bridge ({selectedPath.studentMissingSkills.length})</span>
+              <span>Skills Not Recorded ({selectedPath?.studentMissingSkills.length ?? 0})</span>
             </h3>
           </div>
 
           <div className="space-y-2">
-            {selectedPath.studentMissingSkills.length === 0 ? (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold p-2">
-                All benchmark skills are met for this role!
+            {!selectedPath || selectedPath.studentMissingSkills.length === 0 ? (
+              <p className="text-xs text-[#687572] dark:text-[#94A3B8] p-2">
+                {selectedPath ? 'All listed role-reference skills are present in the profile.' : 'Add technical skills to compare against a role reference.'}
               </p>
             ) : (
               selectedPath.studentMissingSkills.map((skill) => (
@@ -143,7 +146,7 @@ export const StudentSkillGap: React.FC<Props> = ({ student, onNavigateTab }) => 
         </h3>
 
         <div className="space-y-3">
-          {gaps.map((item, idx) => (
+          {gaps.length === 0 ? <p className="text-xs text-[#687572] dark:text-[#94A3B8]">No role-skill gaps can be derived yet. Add technical skills to your profile.</p> : gaps.map((item, idx) => (
             <div
               key={idx}
               className="p-4 rounded-xl bg-[#F7FBFB] dark:bg-[#0E171A] border border-[#E4ECEA] dark:border-[#1F333A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs transition-colors"

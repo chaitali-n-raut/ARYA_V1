@@ -150,7 +150,7 @@ export const LandingPage: React.FC<Props> = ({
                 <ArrowUpRight className="w-4 h-4 text-[#58BDB2] opacity-0 group-hover:opacity-100 transition-opacity" />
               </h3>
               <p className="text-xs text-[#687572] dark:text-[#94A3B8] leading-relaxed">
-                Evaluates academics, attendance, technical skills, projects, certifications, and coding problem frequency using transparent SHAP/LIME feature contributions.
+                Calculates a transparent, deterministic readiness estimate from recorded student fields. SHAP/LIME integration is planned for a future model-backed service.
               </p>
             </div>
 
@@ -264,7 +264,7 @@ export const LandingPage: React.FC<Props> = ({
                     <span>Explainable AI (XAI)</span>
                   </div>
                   <p className="text-xs text-[#687572] dark:text-[#94A3B8] leading-relaxed">
-                    Clear SHAP and LIME-style explanations show why a student received a score and what actions will increase it.
+                    The current interface shows rule-based factors used in the score. SHAP and LIME are planned and are not implemented in this frontend.
                   </p>
                 </div>
 
@@ -423,15 +423,15 @@ export const LandingPage: React.FC<Props> = ({
               <span className="text-xs font-semibold text-[#58BDB2]">Phase 2: Supervised Ensembles</span>
               <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9]">Planned ML Architecture</h4>
               <p className="text-xs text-[#687572] dark:text-[#94A3B8] leading-relaxed">
-                Evaluates Gradient Boosting, XGBoost, Random Forest, and LightGBM for binary and multi-tier placement probability classification.
+                These algorithms are candidates for future evaluation. This frontend has no trained model or placement probability inference.
               </p>
             </div>
 
             <div className="bg-white dark:bg-[#142024] p-6 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] space-y-3">
               <span className="text-xs font-semibold text-[#58BDB2]">Phase 3: Explainability</span>
-              <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9]">SHAP & LIME Insights</h4>
+              <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9]">Planned SHAP & LIME Integration</h4>
               <p className="text-xs text-[#687572] dark:text-[#94A3B8] leading-relaxed">
-                Transforms opaque model predictions into interpretable local feature contributions so students understand exactly why their score increased or decreased.
+                A future evaluated model service may provide SHAP/LIME explanations. Current readiness factors are direct rule descriptions, not feature attributions.
               </p>
             </div>
           </div>

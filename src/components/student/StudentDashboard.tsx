@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StudentRecord } from '../../types';
-import { readinessService } from '../../services/readinessService';
+import { hasStudentRecordData, readinessService } from '../../services/readinessService';
 import { placementService } from '../../services/placementService';
 import { StudentResumeUploadModal } from './StudentResumeUploadModal';
 import {
@@ -36,8 +36,7 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
   const roadmap = readinessService.getPersonalizedRoadmap(student);
 
   // Check if profile is raw/incomplete
-  const isProfileRaw =
-    !student.isProfileCompleted && (student.CGPA === 0 || student.Technical_Skills.length === 0);
+  const isProfileRaw = !hasStudentRecordData(student);
 
   // Profile completion calculation
   let completedFields = 0;
@@ -211,7 +210,7 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
                 </div>
                 <div>
                   <div className="text-sm font-bold text-[#2EA396] dark:text-[#58BDB2]">{readiness.tier}</div>
-                  <div className="text-xs text-[#687572] dark:text-[#94A3B8]">Model Confidence: 88%</div>
+                  <div className="text-xs text-[#687572] dark:text-[#94A3B8]">Rule-based estimate from recorded data</div>
                 </div>
               </div>
 
@@ -241,7 +240,7 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
                 onClick={() => onNavigateTab('readiness')}
                 className="w-full py-2.5 px-4 bg-[#58BDB2] text-white rounded-xl text-xs font-semibold hover:bg-[#48a99f] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <span>Explore Full XAI Factor Breakdown</span>
+                <span>Explore Readiness Factors</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </>
@@ -296,7 +295,7 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
                     <div className="text-xs text-[#687572] dark:text-[#94A3B8]">{factor.actionableAdvice}</div>
                   </div>
                   <span className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60 shrink-0">
-                    {factor.contribution}%
+                    Needs improvement
                   </span>
                 </div>
               ))}
@@ -338,7 +337,9 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
           </div>
 
           <div className="space-y-2">
-            {gaps.slice(0, 3).map((item, idx) => (
+            {gaps.length === 0 ? (
+              <p className="text-xs text-[#687572] dark:text-[#94A3B8]">Add technical skills to your profile to compare it with a role reference.</p>
+            ) : gaps.slice(0, 3).map((item, idx) => (
               <div key={idx} className="p-2.5 rounded-xl bg-[#F7FBFB] dark:bg-[#0D1518] border border-[#E4ECEA] dark:border-[#1F333A] text-xs space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-[#263238] dark:text-[#F1F5F9]">{item.skill}</span>
@@ -368,7 +369,9 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
           </div>
 
           <div className="space-y-2.5">
-            {careerPaths.slice(0, 3).map((path) => (
+            {careerPaths.length === 0 ? (
+              <p className="text-xs text-[#687572] dark:text-[#94A3B8]">Add recorded technical skills to see rule-based role alignment.</p>
+            ) : careerPaths.slice(0, 3).map((path) => (
               <div key={path.id} className="p-2.5 rounded-xl bg-[#F7FBFB] dark:bg-[#0D1518] border border-[#E4ECEA] dark:border-[#1F333A] text-xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-[#263238] dark:text-[#F1F5F9] truncate">{path.title}</span>
@@ -377,7 +380,7 @@ export const StudentDashboard: React.FC<Props> = ({ student, onNavigateTab, onUp
                   </span>
                 </div>
                 <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">
-                  Salary Band: <span className="font-medium text-[#263238] dark:text-[#F1F5F9]">{path.salaryRange}</span>
+                  Role alignment: <span className="font-medium text-[#263238] dark:text-[#F1F5F9]">{path.matchScore}% by listed skills</span>
                 </div>
               </div>
             ))}

@@ -4,45 +4,39 @@ import { studentService } from './studentService';
 const AUTH_USER_KEY = 'arya_ai_current_user_v6';
 const REGISTERED_USERS_KEY = 'arya_ai_registered_accounts_v6';
 
-// Clean legacy keys to ensure no mock/auto-registered demo accounts persist in the browser
-const LEGACY_KEYS = [
-  'arya_ai_current_user',
-  'arya_ai_registered_accounts',
-  'arya_ai_current_user_v1',
-  'arya_ai_current_user_v2',
-  'arya_ai_current_user_v3',
-  'arya_ai_current_user_v4',
-  'arya_ai_current_user_v5',
-  'arya_ai_registered_accounts_v1',
-  'arya_ai_registered_accounts_v2',
-  'arya_ai_registered_accounts_v3',
-  'arya_ai_registered_accounts_v4',
-  'arya_ai_registered_accounts_v5'
-];
-
-class AuthService {
+export class AuthService {
   private currentUser: User | null = null;
   private listeners: ((user: User | null) => void)[] = [];
 
+  private readonly validRoles: UserRole[] = ['student', 'faculty', 'tnp', 'recruiter', 'admin'];
+
+  private withoutPassword(user: User): User {
+    const { password: _password, ...safeUser } = user;
+    return safeUser;
+  }
+
+  private createUserId(): string {
+    return `usr-${crypto.randomUUID()}`;
+  }
+
   constructor() {
-    this.init();
+    if (!import.meta.env?.VITE_AUTH_API_URL?.trim()) this.init();
   }
 
   private init() {
     try {
-      // Purge obsolete versions
-      LEGACY_KEYS.forEach((k) => {
-        try {
-          localStorage.removeItem(k);
-        } catch {
-          // ignore
-        }
-      });
-
       const stored = localStorage.getItem(AUTH_USER_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        this.currentUser = parsed?.isAuthenticated ? parsed : null;
+        const parsed = JSON.parse(stored) as User;
+        const registered = this.getRegisteredUsers().find((user) =>
+          user.id === parsed?.id && user.email === parsed?.email && user.role === parsed?.role
+        );
+        this.currentUser = parsed?.isAuthenticated && registered
+          ? this.withoutPassword({ ...registered, isAuthenticated: true })
+          : null;
+        // Rewrite legacy session objects without their plaintext password field.
+        if (this.currentUser) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(this.currentUser));
+        else localStorage.removeItem(AUTH_USER_KEY);
       } else {
         this.currentUser = null;
       }
@@ -52,10 +46,10 @@ class AuthService {
   }
 
   private saveUser(user: User | null) {
-    this.currentUser = user;
+    this.currentUser = user ? this.withoutPassword(user) : null;
     try {
-      if (user) {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      if (this.currentUser) {
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(this.currentUser));
       } else {
         localStorage.removeItem(AUTH_USER_KEY);
       }
@@ -67,6 +61,12 @@ class AuthService {
 
   public getCurrentUser(): User | null {
     return this.currentUser;
+  }
+
+  /** Keep a verified API user in memory only; the server owns the session cookie. */
+  public setServerUser(user: Omit<User, 'password' | 'isAuthenticated'> | null): void {
+    this.currentUser = user?.emailVerified ? { ...user, isAuthenticated: true } : null;
+    this.notify();
   }
 
   public isAuthenticated(): boolean {
@@ -85,7 +85,7 @@ class AuthService {
     this.listeners.forEach((cb) => cb(this.currentUser));
   }
 
-  public getRegisteredUsers(): User[] {
+  private getRegisteredUsers(): User[] {
     try {
       const stored = localStorage.getItem(REGISTERED_USERS_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -94,25 +94,28 @@ class AuthService {
     }
   }
 
-  private saveRegisteredUser(user: User) {
+  private saveRegisteredUser(user: User): boolean {
     try {
       const users = this.getRegisteredUsers();
+      const { isAuthenticated: _sessionFlag, ...accountRecord } = user;
       const existingIdx = users.findIndex(
-        (u) => u.email.toLowerCase() === user.email.toLowerCase() && u.role === user.role
+        (u) => u.email.toLowerCase() === user.email.toLowerCase()
       );
       if (existingIdx >= 0) {
-        users[existingIdx] = user;
+        users[existingIdx] = accountRecord;
       } else {
-        users.push(user);
+        users.push(accountRecord);
       }
       localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+      return true;
     } catch (e) {
       console.error(e);
+      return false;
     }
   }
 
   /**
-   * Strict login: Checks the database.
+   * Prototype login: validates against browser-local registered account records.
    * If the account has not been explicitly created/registered, returns an error.
    * Does NOT auto-create any account!
    */
@@ -130,9 +133,7 @@ class AuthService {
     }
 
     const registered = this.getRegisteredUsers();
-    const found = registered.find(
-      (u) => u.email.toLowerCase() === cleanEmail && u.role === role
-    );
+    const found = registered.find((u) => u.email.toLowerCase() === cleanEmail && u.role === role);
 
     if (!found) {
       return {
@@ -141,24 +142,21 @@ class AuthService {
       };
     }
 
-    // Verify password if stored
-    if (found.password && found.password !== pass) {
+    // Registered accounts must have a matching password; missing credentials never bypass login.
+    if (!found.password || found.password !== pass) {
       return {
         success: false,
         error: 'Incorrect password for this account. Please re-enter your password.'
       };
     }
 
-    const authenticatedUser: User = {
-      ...found,
-      isAuthenticated: true
-    };
+    const authenticatedUser = this.withoutPassword({ ...found, isAuthenticated: true });
     this.saveUser(authenticatedUser);
     return { success: true, user: authenticatedUser };
   }
 
   /**
-   * Register a new user in the database
+   * Register a new user in browser-local prototype storage.
    */
   public registerUser(
     userData: Partial<User> & {
@@ -172,12 +170,15 @@ class AuthService {
       initialTargetRole?: string;
     }
   ): { success: boolean; user?: User; error?: string } {
-    const role = userData.role || 'student';
+    const role = userData.role;
+    if (!role || !this.validRoles.includes(role)) {
+      return { success: false, error: 'Select a valid account role.' };
+    }
     const cleanEmail = (userData.email || '').trim().toLowerCase();
     const cleanName = (userData.name || '').trim();
 
-    if (!cleanEmail) {
-      return { success: false, error: 'Email address is required.' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return { success: false, error: 'Enter a valid email address.' };
     }
     if (!cleanName) {
       return { success: false, error: 'Full name is required.' };
@@ -188,19 +189,17 @@ class AuthService {
 
     // Check if account already exists
     const existing = this.getRegisteredUsers();
-    const duplicate = existing.find(
-      (u) => u.email.toLowerCase() === cleanEmail && u.role === role
-    );
+    const duplicate = existing.find((u) => u.email.toLowerCase() === cleanEmail);
     if (duplicate) {
       return {
         success: false,
-        error: `An account with email "${cleanEmail}" is already registered as ${role.toUpperCase()}. Please sign in instead.`
+        error: 'An account with this email already exists.'
       };
     }
 
     const studentId =
       role === 'student'
-        ? (userData.studentId?.trim() || `STU-${Date.now().toString().slice(-4)}`).toUpperCase()
+        ? (userData.studentId?.trim() || `STU-${this.createUserId().replace(/[^a-z0-9]/gi, '').slice(-8)}`).toUpperCase()
         : undefined;
 
     const designationByRole: Record<UserRole, string> = {
@@ -212,7 +211,7 @@ class AuthService {
     };
 
     const newUser: User = {
-      id: `usr-${Date.now()}`,
+      id: this.createUserId(),
       name: cleanName,
       email: cleanEmail,
       role,
@@ -263,34 +262,30 @@ class AuthService {
       }
     }
 
-    this.saveRegisteredUser(newUser);
-    this.saveUser(newUser);
-    return { success: true, user: newUser };
+    if (!this.saveRegisteredUser(newUser)) {
+      return { success: false, error: 'Unable to save this account in browser storage. Please try again.' };
+    }
+    const safeUser = this.withoutPassword(newUser);
+    this.saveUser(safeUser);
+    return { success: true, user: safeUser };
   }
 
   public logout(): void {
     this.saveUser(null);
   }
 
-  public clearAllSessionData(): void {
-    localStorage.removeItem(AUTH_USER_KEY);
-    localStorage.removeItem(REGISTERED_USERS_KEY);
-    this.currentUser = null;
-    this.notify();
-  }
-
   public canAccessRole(targetRole: UserRole): { allowed: boolean; reason?: string } {
     if (!this.currentUser || !this.currentUser.isAuthenticated) {
       return {
         allowed: false,
-        reason: `Authentication required. Please sign in with your verified ${targetRole.toUpperCase()} account.`
+        reason: `Authentication required. Please sign in with a registered ${targetRole.toUpperCase()} account.`
       };
     }
 
     if (this.currentUser.role !== targetRole) {
       return {
         allowed: false,
-        reason: `Access restricted. You are currently authenticated as "${this.currentUser.role.toUpperCase()}" (${this.currentUser.name}). This page requires a verified ${targetRole.toUpperCase()} account.`
+        reason: `Access restricted. You are currently signed in as "${this.currentUser.role.toUpperCase()}" (${this.currentUser.name}). This page requires the ${targetRole.toUpperCase()} role.`
       };
     }
 

@@ -29,68 +29,10 @@ export class CsvParserService {
       'Communication_Score',
       'Class_Teacher',
       'Mentor',
+      'Assigned_Faculty_ID',
       'Location'
     ];
-
-    const sampleRow1 = [
-      'STU-2026-001',
-      'Student Name A',
-      'student.a@university.edu',
-      '+91 99887 76655',
-      'School of Computing & IT',
-      'Computer Science and Engineering',
-      'Computer Science & Engineering',
-      '4',
-      'CSE-A',
-      '2026',
-      '8.65',
-      '94.0',
-      '0',
-      'Java;Spring Boot;PostgreSQL;Docker;AWS',
-      'AWS Cloud Practitioner;Oracle Java SE',
-      'Backend Intern @ Tech Firm (2 months)',
-      'Campus Bus Tracking App;Distributed Cache Engine',
-      'LeetCode',
-      '310',
-      '1680',
-      '8.5',
-      'Faculty Mentor',
-      'Department Advisor',
-      'Campus'
-    ];
-
-    const sampleRow2 = [
-      'STU-2026-002',
-      'Student Name B',
-      'student.b@university.edu',
-      '+91 98112 33445',
-      'School of Computing & IT',
-      'Information Technology',
-      'Information Technology',
-      '4',
-      'IT-B',
-      '2026',
-      '7.40',
-      '82.0',
-      '0',
-      'Python;Django;MySQL;Git;Tailwind CSS',
-      'Coursera Python Data Structures',
-      'Web Dev Trainee @ Software Inc (1 month)',
-      'Student Attendance QR Scanner',
-      'HackerRank',
-      '140',
-      '1420',
-      '7.8',
-      'Faculty Mentor',
-      'Department Advisor',
-      'Campus'
-    ];
-
-    return [
-      headers.join(','),
-      sampleRow1.join(','),
-      sampleRow2.join(',')
-    ].join('\n');
+    return headers.join(',');
   }
 
   /**
@@ -137,15 +79,15 @@ export class CsvParserService {
       const rawId = (recordMap['STUDENT_ID'] || '').trim().toUpperCase();
       const fullName = (recordMap['FULL_NAME'] || '').trim();
       const email = (recordMap['EMAIL'] || '').trim();
-      const branch = recordMap['BRANCH'] || recordMap['DEPARTMENT'] || 'Computer Science & Engineering';
+      const branch = recordMap['BRANCH'] || recordMap['DEPARTMENT'] || '';
 
-      const cgpaStr = recordMap['CGPA'] || '0';
+      const cgpaStr = recordMap['CGPA'] || '';
       const cgpa = parseFloat(cgpaStr);
 
-      const attStr = recordMap['ATTENDANCE_PERCENTAGE'] || recordMap['ATTENDANCE'] || '100';
+      const attStr = recordMap['ATTENDANCE_PERCENTAGE'] || recordMap['ATTENDANCE'] || '';
       const attendance = parseFloat(attStr);
 
-      const backlogsStr = recordMap['BACKLOGS'] || '0';
+      const backlogsStr = recordMap['BACKLOGS'] || '';
       const backlogs = parseInt(backlogsStr, 10);
 
       const messages: string[] = [];
@@ -180,10 +122,18 @@ export class CsvParserService {
         messages.push(`CGPA must be a decimal between 0.0 and 10.0 (received: ${cgpaStr})`);
         status = 'error';
       }
+      if (!cgpaStr.trim()) {
+        messages.push('CGPA is required');
+        status = 'error';
+      }
 
       // 5. Validate Attendance (0 to 100)
       if (isNaN(attendance) || attendance < 0 || attendance > 100) {
         messages.push(`Attendance must be between 0% and 100% (received: ${attStr})`);
+        status = 'error';
+      }
+      if (!attStr.trim()) {
+        messages.push('Attendance is required');
         status = 'error';
       }
 
@@ -192,13 +142,25 @@ export class CsvParserService {
         messages.push(`Backlogs must be a non-negative integer (received: ${backlogsStr})`);
         status = 'error';
       }
+      if (!backlogsStr.trim()) {
+        messages.push('Backlogs is required');
+        status = 'error';
+      }
+
+      const graduationYear = parseInt(recordMap['GRADUATION_YEAR'] || '', 10);
+      if (!recordMap['GRADUATION_YEAR'] || isNaN(graduationYear)) {
+        messages.push('Graduation_Year is required');
+        status = 'error';
+      }
 
       // Check if already in existing system
-      const alreadyExists = existingStudents.some((s) => s.Student_ID.toUpperCase() === rawId);
+      const existingStudent = existingStudents.find((s) => s.Student_ID.trim().toUpperCase() === rawId);
       if (status !== 'error') {
-        if (alreadyExists) {
-          status = 'existing';
-          messages.push('Existing student record will be updated');
+        if (existingStudent) {
+          status = 'error';
+          messages.push(existingStudent.datasetId
+            ? 'Student_ID already exists in another dataset.'
+            : 'Student_ID already exists in student records.');
         } else if (cgpa < 6.0 || backlogs > 0) {
           status = 'warning';
           messages.push('Flagged for academic advisory review (CGPA < 6.0 or active backlog)');
@@ -213,28 +175,29 @@ export class CsvParserService {
         Student_ID: rawId,
         Full_Name: fullName,
         Email: email,
-        Phone: recordMap['PHONE'] || '+91 90000 00000',
-        College: recordMap['COLLEGE'] || 'School of Computing & IT',
-        Department: recordMap['DEPARTMENT'] || 'Computer Science and Engineering',
+        Phone: recordMap['PHONE'] || '',
+        College: recordMap['COLLEGE'] || '',
+        Department: recordMap['DEPARTMENT'] || '',
         Branch: branch,
-        Year: parseInt(recordMap['YEAR'] || '4', 10) || 4,
+        Year: parseInt(recordMap['YEAR'] || '0', 10) || 0,
         Section: recordMap['SECTION'] || 'A',
-        Graduation_Year: parseInt(recordMap['GRADUATION_YEAR'] || '2026', 10) || 2026,
-        CGPA: isNaN(cgpa) ? 7.0 : cgpa,
-        Attendance_Percentage: isNaN(attendance) ? 85 : attendance,
+        Graduation_Year: isNaN(graduationYear) ? 0 : graduationYear,
+        CGPA: isNaN(cgpa) ? 0 : cgpa,
+        Attendance_Percentage: isNaN(attendance) ? 0 : attendance,
         Backlogs: isNaN(backlogs) ? 0 : backlogs,
         Technical_Skills: parseList(recordMap['TECHNICAL_SKILLS']),
         Certifications: parseList(recordMap['CERTIFICATIONS']),
         Internships: parseList(recordMap['INTERNSHIPS']),
         Projects: parseList(recordMap['PROJECTS']),
         Coding_Activity: {
-          platform: recordMap['CODING_PLATFORM'] || 'LeetCode',
-          problemsSolved: parseInt(recordMap['PROBLEMS_SOLVED'] || '100', 10) || 100,
-          contestRating: parseInt(recordMap['CONTEST_RATING'] || '1400', 10) || 1400
+          platform: recordMap['CODING_PLATFORM'] || '',
+          problemsSolved: parseInt(recordMap['PROBLEMS_SOLVED'] || '0', 10) || 0,
+          contestRating: parseInt(recordMap['CONTEST_RATING'] || '0', 10) || 0
         },
-        Communication_Score: parseFloat(recordMap['COMMUNICATION_SCORE'] || '7.5') || 7.5,
+        Communication_Score: parseFloat(recordMap['COMMUNICATION_SCORE'] || '0') || 0,
         Class_Teacher: recordMap['CLASS_TEACHER'] || recordMap['CLASS TEACHER'] || '',
         Mentor: recordMap['MENTOR'] || recordMap['FACULTY MENTOR'] || '',
+        assignedFacultyId: recordMap['ASSIGNED_FACULTY_ID'] || '',
         Location: recordMap['LOCATION'] || ''
       };
 
@@ -258,7 +221,7 @@ export class CsvParserService {
       validCount: previewRows.filter((r) => r.status === 'valid').length,
       warningCount: previewRows.filter((r) => r.status === 'warning').length,
       errorCount: previewRows.filter((r) => r.status === 'error').length,
-      existingCount: previewRows.filter((r) => r.status === 'existing').length,
+      existingCount: previewRows.filter((r) => r.messages.some((message) => message.startsWith('Student_ID already exists'))).length,
       importedCount: 0
     };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StudentRecord, RoadmapMilestone } from '../../types';
 import { readinessService } from '../../services/readinessService';
 import { Milestone, CheckCircle2, Circle, Clock, Sparkles } from 'lucide-react';
@@ -10,6 +10,10 @@ interface Props {
 export const StudentRoadmap: React.FC<Props> = ({ student }) => {
   const initialRoadmap = readinessService.getPersonalizedRoadmap(student);
   const [milestones, setMilestones] = useState<RoadmapMilestone[]>(initialRoadmap);
+
+  useEffect(() => {
+    setMilestones(readinessService.getPersonalizedRoadmap(student));
+  }, [student]);
 
   const toggleActionItem = (milestoneId: string, actionId: string) => {
     setMilestones((prev) =>
@@ -44,7 +48,7 @@ export const StudentRoadmap: React.FC<Props> = ({ student }) => {
         <div>
           <h2 className="text-xl font-bold text-[#263238] dark:text-[#F1F5F9]">Personalized Learning Roadmap</h2>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-0.5">
-            Customized multi-week progression to eliminate skill gaps and maximize interview performance.
+            Actions are generated from the current profile and role-skill gaps. Suggested actions begin unchecked and are not evidence of completed work.
           </p>
         </div>
 

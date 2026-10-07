@@ -67,7 +67,7 @@ export const ResearchModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <span>2. Supervised Ensemble Model Architecture (Planned Backend)</span>
             </h4>
             <p>
-              The complete production architecture employs tabular gradient-boosted decision trees and ensemble classifiers to predict multi-class placement readiness:
+              A future backend may evaluate tabular classifiers for placement-readiness research. Those models are not included or run by this frontend; the current score uses deterministic weighted rules.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="p-3 bg-[#F7FBFB] dark:bg-[#0E171A] rounded-xl border border-[#E4ECEA] dark:border-[#1F333A] space-y-1">
@@ -96,14 +96,14 @@ export const ResearchModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <div className="space-y-2">
             <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#8B5CF6]" />
-              <span>3. Explainability Layer: SHAP & LIME Interpretability</span>
+              <span>3. Planned Explainability Integration</span>
             </h4>
             <p>
-              To eliminate opaque "black-box" decision making that causes anxiety among undergraduate students, ARYA AI incorporates SHAP (SHapley Additive exPlanations) and LIME (Local Interpretable Model-agnostic Explanations):
+              SHAP and LIME are proposed for a future model-backed explanation layer. They are not implemented in this repository. The current interface shows the recorded dimensions and rule-based factors used by its score:
             </p>
             <div className="p-3.5 bg-[#EAF7F8]/40 dark:bg-[#122D29]/40 border border-[#58BDB2]/20 dark:border-[#27665E] rounded-xl space-y-1 text-[11px]">
-              <div>• <strong>Positive Shapley Contributions:</strong> Highlights verified strengths (e.g. high competitive programming score or accredited cloud credentials) that increase placement likelihood.</div>
-              <div>• <strong>Negative / Deficiency Penalties:</strong> Isolates the exact criteria suppressing a student's score (e.g. single academic backlog or low project portfolio count) and attaches actionable mitigation guidance.</div>
+              <div><strong>Current factors:</strong> These are rule-based profile descriptions, not SHAP contributions or placement likelihood estimates.</div>
+              <div><strong>Future work:</strong> SHAP/LIME integration requires a trained model and evaluation pipeline.</div>
             </div>
           </div>
 
@@ -116,9 +116,57 @@ export const ResearchModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <p>
               The system architecture conceptually decouples:
               <br />
-              <strong>Client Interface</strong> (React + TypeScript + Tailwind) &rarr; <strong>REST API Gateway</strong> (Node.js/Express) &rarr; <strong>Central Relational Database</strong> &rarr; <strong>Python ML Service</strong> (Scikit-Learn, LightGBM, SHAP).
+              Current implementation: <strong>React + TypeScript</strong> with browser-local application services. A future architecture may add an API, database, and evaluated Python model service; those backend components are not present here.
               <br />
-              All student records are secured via Student_ID primary binding with role-based access control (RBAC) ensuring students access only their authorized profile.
+              The frontend applies role checks and student-ID matching in the UI. These checks improve navigation and data scoping in the prototype, but they are not server-side authorization and can be bypassed by a user who controls the browser.
+            </p>
+          </div>
+
+          {/* Section 5: Current prototype storage and planned backend */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
+              <Database className="w-4 h-4 text-[#58BDB2]" />
+              <span>5. Data & Storage</span>
+            </h4>
+            <p>
+              This version is a frontend prototype. Data is stored locally in the browser and is not yet synchronized across devices. The app's services use these localStorage areas:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[11px]">
+              <li>Accounts and prototype credentials: <code>arya_ai_registered_accounts_v6</code></li>
+              <li>Current-user session and role: <code>arya_ai_current_user_v6</code> for local prototype login (session record excludes the password); a future configured API owns its server session cookie</li>
+              <li>Student records: <code>arya_ai_students_db_v6</code></li>
+              <li>Imported dataset metadata: <code>arya_ai_student_datasets_v1</code></li>
+              <li>Placement drives, applications, and notifications: <code>arya_ai_placement_drives_v2</code>, <code>arya_ai_applications_v2</code>, and <code>arya_ai_notifications_v2</code></li>
+              <li>Theme preference: <code>arya_theme</code></li>
+            </ul>
+            <p className="text-[11px]">
+              Account passwords are currently stored as plaintext in browser-local prototype account data. This is not secure production authentication. Roles are selected during registration and stored with the account; there is no server-side role verification. The interface does not display credentials; logout removes the current-user session while retaining accounts and application records.
+            </p>
+            <p className="text-[11px]">
+              Older-version storage keys, if present, are left untouched and are not migrated automatically.
+            </p>
+            <div className="p-3.5 bg-[#EAF7F8]/40 dark:bg-[#122D29]/40 border border-[#58BDB2]/20 dark:border-[#27665E] rounded-xl text-[11px] font-semibold text-[#263238] dark:text-[#F1F5F9]">
+              Planned production architecture: React Frontend<br />↓<br />Node.js / Express API<br />↓<br />Backend authentication + database<br />↓<br />ML / AI services
+            </div>
+          </div>
+
+          {/* Section 6: Authentication and email integration status */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#58BDB2]" />
+              <span>6. Authentication & Email Integration</span>
+            </h4>
+            <p>
+              This repository currently contains a frontend authentication prototype, not a server or email provider. The optional <code>VITE_AUTH_API_URL</code> setting connects the interface to a separately deployed authentication API; without it, registration, email verification, login notification delivery, and password recovery are unavailable. The interface does not generate OTPs or claim an email was sent.
+            </p>
+            <p>
+              A configured server is expected to own pending-account creation, six-digit verification codes, expiry and attempt limits, resend cooldowns, one-time use, password hashing, login notifications, and reset tokens. Provider credentials belong only in server-side environment variables. The frontend API contract is defined, but no server implementation exists in this working tree.
+            </p>
+            <p>
+              Existing local prototype accounts still contain plaintext passwords in browser localStorage. Email verification is unavailable for those local accounts and would prove control of an email address only; it does not prove someone is a student, faculty member, T&P officer, recruiter, or administrator. Production role assignment requires separate institutional or organization approval. SMS is not implemented and may be added later as optional MFA.
+            </p>
+            <p className="text-[11px]">
+              Frontend role checks are for prototype navigation only. A production service must enforce authorization and maintain authentication event records server-side without recording passwords or OTPs.
             </p>
           </div>
         </div>

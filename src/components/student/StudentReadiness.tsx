@@ -53,11 +53,11 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-[#263238] dark:text-[#F1F5F9]">Placement Readiness Diagnostics</h2>
             <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#EAF7F8] dark:bg-[#133330] text-[#2EA396] dark:text-[#58BDB2] font-semibold border border-[#58BDB2]/30 dark:border-[#27665E]">
-              Live Readiness Assessment
+              Rule-Based Readiness
             </span>
           </div>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1 max-w-2xl leading-relaxed">
-            Transparent composite readiness model derived from verified academic standing, technical competence, project deliverables, and coding volume.
+              A deterministic decision-support score from recorded student information. It is not a trained model or a placement probability.
           </p>
         </div>
 
@@ -89,13 +89,13 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
           <div className="md:col-span-8 space-y-3 border-t md:border-t-0 md:border-l border-[#58BDB2]/20 dark:border-[#27665E]/50 pt-4 md:pt-0 md:pl-8">
             <h3 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9] flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#58BDB2]" />
-              <span>Explainable AI (XAI) Synthesis</span>
+              <span>Rule-Based Readiness Factors</span>
             </h3>
             <p className="text-xs text-[#263238]/80 dark:text-[#E2E8F0]/85 leading-relaxed">
               {evaluation.explainabilitySummary}
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-[#687572] dark:text-[#94A3B8]">
-              <span>Model Confidence: <strong className="text-[#263238] dark:text-[#F1F5F9]">88%</strong></span>
+              <span>Method: <strong className="text-[#263238] dark:text-[#F1F5F9]">Weighted rules</strong></span>
               <span>·</span>
               <span>Evaluated Candidate: <strong className="text-[#263238] dark:text-[#F1F5F9]">{student.Student_ID}</strong></span>
               <span>·</span>
@@ -142,7 +142,7 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
         </div>
       </div>
 
-      {/* XAI Factors (SHAP & LIME Inspired Contributions) */}
+      {/* Factors are direct rule inputs, not SHAP/LIME attributions. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Positive Factors */}
         <div className="bg-white dark:bg-[#142024] p-6 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs space-y-4 transition-colors">
@@ -159,8 +159,8 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#263238] dark:text-[#F1F5F9]">{factor.name}</span>
-                  <span className="font-mono font-bold text-[#2EA396] dark:text-[#58BDB2] text-[11px] bg-white dark:bg-[#16332E] px-2 py-0.5 rounded border border-[#58BDB2]/20 dark:border-[#27665E]">
-                    +{factor.contribution}%
+                    <span className="font-mono font-bold text-[#2EA396] dark:text-[#58BDB2] text-[11px] bg-white dark:bg-[#16332E] px-2 py-0.5 rounded border border-[#58BDB2]/20 dark:border-[#27665E]">
+                      Positive factor
                   </span>
                 </div>
                 <p className="text-[#687572] dark:text-[#94A3B8] text-[11px] leading-snug">{factor.detail}</p>
@@ -182,7 +182,7 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
           <div className="space-y-3">
             {evaluation.negativeFactors.length === 0 ? (
               <div className="p-4 rounded-xl bg-[#F7FBFB] dark:bg-[#0E171A] border border-[#E4ECEA] dark:border-[#1F333A] text-xs text-[#687572] dark:text-[#94A3B8] text-center">
-                No critical penalty factors detected. Candidate is maintaining strong placement alignment!
+                No recorded dimensions fall below the current rule-set threshold. This is not a placement outcome prediction.
               </div>
             ) : (
               evaluation.negativeFactors.map((factor, idx) => (
@@ -193,7 +193,7 @@ export const StudentReadiness: React.FC<Props> = ({ student, onNavigateTab, onOp
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#263238] dark:text-[#F1F5F9]">{factor.name}</span>
                     <span className="font-mono font-bold text-amber-700 dark:text-amber-300 text-[11px] bg-white dark:bg-[#2D1F10] px-2 py-0.5 rounded border border-amber-200 dark:border-[#4B3518]">
-                      {factor.contribution}%
+                      Needs improvement
                     </span>
                   </div>
                   <p className="text-[#687572] dark:text-[#94A3B8] text-[11px] leading-snug">{factor.detail}</p>

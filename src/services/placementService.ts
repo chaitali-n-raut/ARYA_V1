@@ -1,116 +1,12 @@
 import { PlacementDrive, JobApplication, StudentRecord, NotificationItem } from '../types';
+import { readinessService } from './readinessService';
 
 const DRIVES_STORAGE_KEY = 'arya_ai_placement_drives_v2';
 const APPLICATIONS_STORAGE_KEY = 'arya_ai_applications_v2';
 const NOTIFICATIONS_STORAGE_KEY = 'arya_ai_notifications_v2';
 
-export const INITIAL_DRIVES: PlacementDrive[] = [
-  {
-    id: 'drive-001',
-    companyName: 'Thoughtworks Technologies',
-    logoText: 'TW',
-    role: 'Graduate Consultant / Software Developer',
-    packageLPA: '₹12.0 - ₹14.5 LPA',
-    jobType: 'Full-time',
-    location: 'Bangalore / Pune / Hyderabad',
-    driveDate: '2026-10-14',
-    applicationDeadline: '2026-10-05',
-    eligibility: {
-      minCGPA: 7.5,
-      maxBacklogs: 0,
-      allowedBranches: ['Computer Science & Engineering', 'Data Science & AI', 'Information Technology'],
-      graduationYear: 2026
-    },
-    requiredSkills: ['React', 'Node.js', 'Clean Code', 'TDD', 'Data Structures & Algorithms'],
-    description: 'Looking for agile, passionate engineers who value clean craft, continuous integration, diversity, and collaborative problem-solving.',
-    totalOpenings: 35,
-    isDemo: true
-  },
-  {
-    id: 'drive-002',
-    companyName: 'CloudScale Dynamics & AI',
-    logoText: 'CSD',
-    role: 'Cloud Solutions Associate',
-    packageLPA: '₹11.0 - ₹13.5 LPA',
-    jobType: 'Full-time',
-    location: 'Bangalore / Remote',
-    driveDate: '2026-10-18',
-    applicationDeadline: '2026-10-08',
-    eligibility: {
-      minCGPA: 7.0,
-      maxBacklogs: 0,
-      allowedBranches: ['Computer Science & Engineering', 'Information Technology', 'Cybersecurity & Networks'],
-      graduationYear: 2026
-    },
-    requiredSkills: ['Docker', 'AWS', 'Linux Administration', 'Python', 'PostgreSQL'],
-    description: 'Join the infrastructure engineering squad optimizing distributed microservices, multi-region observability, and Kubernetes clusters.',
-    totalOpenings: 20,
-    isDemo: true
-  },
-  {
-    id: 'drive-003',
-    companyName: 'Zomato Engineering',
-    logoText: 'ZOM',
-    role: 'Software Development Engineer - I (Frontend / FullStack)',
-    packageLPA: '₹16.0 - ₹18.5 LPA',
-    jobType: 'Full-time',
-    location: 'Gurgaon, India',
-    driveDate: '2026-10-25',
-    applicationDeadline: '2026-10-12',
-    eligibility: {
-      minCGPA: 8.0,
-      maxBacklogs: 0,
-      allowedBranches: ['Computer Science & Engineering', 'Data Science & AI', 'Information Technology'],
-      graduationYear: 2026
-    },
-    requiredSkills: ['React', 'TypeScript', 'Tailwind CSS', 'Performance Optimization', 'REST APIs'],
-    description: 'Work on high-scale customer apps serving millions of active food & grocery delivery orders every day.',
-    totalOpenings: 15,
-    isDemo: true
-  },
-  {
-    id: 'drive-004',
-    companyName: 'Fractal Analytics & AI',
-    logoText: 'FRC',
-    role: 'Associate Data Scientist / ML Engineer',
-    packageLPA: '₹10.5 - ₹13.0 LPA',
-    jobType: 'Full-time',
-    location: 'Mumbai / Bangalore',
-    driveDate: '2026-10-28',
-    applicationDeadline: '2026-10-15',
-    eligibility: {
-      minCGPA: 8.0,
-      maxBacklogs: 0,
-      allowedBranches: ['Data Science & AI', 'Computer Science & Engineering'],
-      graduationYear: 2026
-    },
-    requiredSkills: ['Python', 'SQL', 'PyTorch', 'Scikit-learn', 'Pandas', 'FastAPI'],
-    description: 'Empower Fortune 500 enterprises with generative AI prototypes, customer churn models, and pricing intelligence.',
-    totalOpenings: 25,
-    isDemo: true
-  },
-  {
-    id: 'drive-005',
-    companyName: 'Infosys Specialist Programmer',
-    logoText: 'INF',
-    role: 'Specialist Programmer (Power Programmer)',
-    packageLPA: '₹9.5 LPA',
-    jobType: 'Specialist',
-    location: 'Pan-India',
-    driveDate: '2026-11-04',
-    applicationDeadline: '2026-10-20',
-    eligibility: {
-      minCGPA: 6.5,
-      maxBacklogs: 0,
-      allowedBranches: ['Computer Science & Engineering', 'Information Technology', 'Data Science & AI', 'Cybersecurity & Networks'],
-      graduationYear: 2026
-    },
-    requiredSkills: ['Data Structures & Algorithms', 'Competitive Programming', 'Java / Python / C++'],
-    description: 'Elite programming track within Infosys focusing on complex architecture design, algorithm development, and digital transformation.',
-    totalOpenings: 50,
-    isDemo: true
-  }
-];
+export const INITIAL_DRIVES: PlacementDrive[] = [];
+
 
 export const INITIAL_APPLICATIONS: JobApplication[] = [];
 
@@ -146,7 +42,15 @@ class PlacementService {
         localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(INITIAL_APPLICATIONS));
         return INITIAL_APPLICATIONS;
       }
-      return JSON.parse(data);
+      const applications = JSON.parse(data) as JobApplication[];
+      const normalized = applications.map((application) => ({
+        ...application,
+        applicationId: application.applicationId || application.id
+      }));
+      if (normalized.some((application, index) => application.applicationId !== applications[index].applicationId)) {
+        localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(normalized));
+      }
+      return normalized;
     } catch {
       return INITIAL_APPLICATIONS;
     }
@@ -167,6 +71,10 @@ class PlacementService {
 
   public getAllDrives(): PlacementDrive[] {
     return this.getDrives();
+  }
+
+  public getPublishedDrives(): PlacementDrive[] {
+    return this.getDrives().filter((drive) => !drive.isDemo && (drive.status || 'Active') !== 'Closed');
   }
 
   public getDriveById(id: string): PlacementDrive | null {
@@ -215,6 +123,16 @@ class PlacementService {
     localStorage.setItem(DRIVES_STORAGE_KEY, JSON.stringify([]));
   }
 
+  public clearDemoData(): void {
+    const drives = this.getDrives();
+    const demoDriveIds = new Set(drives.filter((drive) => drive.isDemo).map((drive) => drive.id));
+    localStorage.setItem(DRIVES_STORAGE_KEY, JSON.stringify(drives.filter((drive) => !drive.isDemo)));
+    localStorage.setItem(
+      APPLICATIONS_STORAGE_KEY,
+      JSON.stringify(this.getApplications().filter((application) => !demoDriveIds.has(application.driveId)))
+    );
+  }
+
   public resetToDefaultDrives(): void {
     localStorage.setItem(DRIVES_STORAGE_KEY, JSON.stringify(INITIAL_DRIVES));
   }
@@ -236,6 +154,9 @@ class PlacementService {
     if (student.Backlogs > drive.eligibility.maxBacklogs) {
       reasons.push(`Student has ${student.Backlogs} active backlogs (maximum permitted: ${drive.eligibility.maxBacklogs})`);
     }
+    if (student.Graduation_Year !== drive.eligibility.graduationYear) {
+      reasons.push(`Graduation year (${student.Graduation_Year}) does not match required year ${drive.eligibility.graduationYear}`);
+    }
     if (!drive.eligibility.allowedBranches.includes(student.Branch)) {
       reasons.push(`Branch '${student.Branch}' is not in the approved branches list`);
     }
@@ -248,36 +169,39 @@ class PlacementService {
 
   public getApplicationsByStudent(studentId: string): JobApplication[] {
     const all = this.getApplications();
-    return all.filter((a) => a.studentId.toUpperCase() === studentId.trim().toUpperCase());
+    return all.filter((a) => a.studentId.trim().toUpperCase() === studentId.trim().toUpperCase());
   }
 
   public applyToDrive(student: StudentRecord, drive: PlacementDrive): { success: boolean; message: string } {
     const apps = this.getApplications();
     const already = apps.find(
-      (a) => a.studentId.toUpperCase() === student.Student_ID.toUpperCase() && a.driveId === drive.id
+      (application) => application.studentId.trim().toUpperCase() === student.Student_ID.trim().toUpperCase() && application.driveId === drive.id
     );
+    if (already) return { success: false, message: 'Already Applied' };
 
-    if (already) {
-      return { success: false, message: 'You have already submitted an application for this placement drive.' };
+    const publishedDrive = this.getDrives().find((candidate) => candidate.id === drive.id && !candidate.isDemo);
+    if (!publishedDrive || (publishedDrive.status || 'Active') !== 'Active') {
+      return { success: false, message: 'This placement drive is not currently open for applications.' };
     }
 
-    const { eligible, reasons } = this.checkEligibility(student, drive);
+    const { eligible, reasons } = this.checkEligibility(student, publishedDrive);
     if (!eligible) {
       return { success: false, message: `Eligibility criteria not met: ${reasons.join(', ')}` };
     }
 
+    const applicationId = `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const newApp: JobApplication = {
-      id: `app-${Date.now()}`,
-      driveId: drive.id,
+      id: applicationId,
+      applicationId,
+      driveId: publishedDrive.id,
       studentId: student.Student_ID,
-      companyName: drive.companyName,
-      role: drive.role,
-      packageLPA: drive.packageLPA,
+      companyName: publishedDrive.companyName,
+      role: publishedDrive.role,
+      packageLPA: publishedDrive.packageLPA,
       appliedDate: new Date().toISOString().split('T')[0],
       status: 'Applied',
       stageNotes: 'Application received and verified by T&P portal. Ready for recruiter shortlisting.'
     };
-
     apps.unshift(newApp);
     localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(apps));
     return { success: true, message: `Successfully applied to ${drive.companyName} for ${drive.role}!` };
@@ -403,7 +327,7 @@ class PlacementService {
 
       const stage1Passed = failReasons.length === 0;
 
-      const studentSkillsLower = stu.Technical_Skills.map((s) => s.toLowerCase());
+      const studentSkillsLower = (stu.Technical_Skills ?? []).map((s) => s.toLowerCase());
       const matchingSkills = criteria.requiredSkills.filter((req) =>
         studentSkillsLower.some((s) => s.includes(req.toLowerCase()) || req.toLowerCase().includes(s))
       );
@@ -414,11 +338,11 @@ class PlacementService {
       const skillFitPercent = criteria.requiredSkills.length > 0
         ? (matchingSkills.length / criteria.requiredSkills.length) * 60
         : 60;
-      const projectBonus = Math.min(20, stu.Projects.length * 7);
-      const codingBonus = Math.min(20, (stu.Coding_Activity.problemsSolved / 400) * 20);
+      const projectBonus = Math.min(20, (stu.Projects?.length ?? 0) * 7);
+      const codingBonus = Math.min(20, ((stu.Coding_Activity?.problemsSolved ?? 0) / 400) * 20);
 
       const stage2FitScore = Math.min(100, Math.round(skillFitPercent + projectBonus + codingBonus));
-      const readinessScore = Math.round((stu.CGPA / 10) * 40 + (stu.Technical_Skills.length * 5) + (stu.Projects.length * 10));
+      const readinessScore = readinessService.evaluateStudentReadiness(stu).overallScore;
 
       return {
         student: stu,
@@ -427,7 +351,7 @@ class PlacementService {
         stage2FitScore,
         matchingSkills,
         missingSkills,
-        readinessScore: Math.min(98, readinessScore)
+        readinessScore
       };
     }).sort((a, b) => {
       // Hard filter passes come first, then ranked by stage2FitScore

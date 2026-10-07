@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { User, PlacementDrive, StudentRecord, JobApplication } from '../../types';
 import { placementService } from '../../services/placementService';
 import { studentService } from '../../services/studentService';
+import { readinessService } from '../../services/readinessService';
 import {
   Building2,
   Briefcase,
@@ -27,7 +28,6 @@ import {
   ArrowRight,
   ShieldCheck,
   ChevronDown,
-  RefreshCw,
   Clock,
   Award
 } from 'lucide-react';
@@ -126,17 +126,19 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
     });
   }, [students, policyBranchFilter]);
 
-  const totalCohortCount = filteredCohort.length;
-  const eligibleCohortCount = filteredCohort.filter(
-    (s) => s.Backlogs <= policyMaxBacklogs && s.CGPA >= policyMinCgpa
-  ).length;
+  const totalCohortCount = students.length;
+  const selectedMetricDrive = inspectDrive || drives.find((drive) => !drive.isDemo && drive.status === 'Active');
+  const eligibleStudents = selectedMetricDrive
+    ? students.filter((student) => placementService.checkEligibility(student, selectedMetricDrive).eligible)
+    : [];
+  const eligibleCohortCount = eligibleStudents.length;
   const highTierReadyCount = filteredCohort.filter(
-    (s) => s.Backlogs === 0 && s.CGPA >= 8.5
+    (student) => readinessService.evaluateStudentReadiness(student).tier === 'High Placement Readiness'
   ).length;
   const remedialCount = filteredCohort.filter((s) => s.Backlogs > 0).length;
-
-  // Check if current drives contain any preloaded demo/sample drives
-  const hasDemoDrives = drives.some((d) => d.isDemo);
+  const activeDrives = drives.filter((drive) => !drive.isDemo && drive.status === 'Active');
+  const activeDriveIds = new Set(activeDrives.map((drive) => drive.id));
+  const activeDriveApplications = applications.filter((application) => activeDriveIds.has(application.driveId));
 
   // ---------------- DRIVE MANAGEMENT ----------------
   const handleOpenCreateModal = () => {
@@ -248,18 +250,10 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
   };
 
   const handleClearDefaultDrives = () => {
-    if (window.confirm('Clear all default/sample placement drives? This allows you to start fresh with only authorized drives officially scheduled by the T&P Cell.')) {
-      placementService.clearAllDrives();
+    if (window.confirm('Remove demo placement drives and their applications? Your official drives, student records, and other role data will be kept.')) {
+      placementService.clearDemoData();
       refreshData();
-      showToast('All sample drives cleared. You can now schedule official campus drives.');
-    }
-  };
-
-  const handleResetSampleDrives = () => {
-    if (window.confirm('Restore initial sample drives for demonstration purposes?')) {
-      placementService.resetToDefaultDrives();
-      refreshData();
-      showToast('Sample placement drives restored.');
+      showToast('Demo placement data cleared.');
     }
   };
 
@@ -358,27 +352,14 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {hasDemoDrives && (
-            <button
-              onClick={handleClearDefaultDrives}
-              title="Remove sample preloaded drives to only show officially authorized company drives"
-              className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear Sample Drives</span>
-            </button>
-          )}
-
-          {!hasDemoDrives && (
-            <button
-              onClick={handleResetSampleDrives}
-              title="Restore standard sample company templates"
-              className="px-3 py-2 text-xs font-medium rounded-xl border border-[#E4ECEA] dark:border-[#1F333A] text-[#687572] dark:text-[#94A3B8] hover:bg-neutral-50 dark:hover:bg-[#1B2B30] transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span>Load Templates</span>
-            </button>
-          )}
+          <button
+            onClick={handleClearDefaultDrives}
+            title="Remove demo drives and their applications while keeping official drives and student records"
+            className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Start with Clean Slate</span>
+          </button>
 
           <button
             onClick={handleOpenCreateModal}
@@ -391,7 +372,7 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
       </div>
 
       {/* Notice Banner regarding authorized data */}
-      {hasDemoDrives && (
+      {drives.some((drive) => drive.isDemo) && (
         <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start justify-between gap-3 text-xs text-amber-900 dark:text-amber-200 transition-colors">
           <div className="flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -402,12 +383,6 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleClearDefaultDrives}
-            className="text-[11px] font-bold text-amber-900 dark:text-amber-200 underline hover:no-underline shrink-0 cursor-pointer"
-          >
-            Start with Clean Slate
-          </button>
         </div>
       )}
 
@@ -419,7 +394,7 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
             <Users className="w-4 h-4 text-[#58BDB2]" />
           </div>
           <div className="text-3xl font-extrabold font-mono text-[#263238] dark:text-[#F1F5F9]">{totalCohortCount}</div>
-          <div className="text-[11px] text-[#2EA396] dark:text-[#58BDB2] font-medium">B.Tech 2026 Student Roster</div>
+          <div className="text-[11px] text-[#2EA396] dark:text-[#58BDB2] font-medium">{totalCohortCount === 0 ? 'No student records available' : 'Student records in application'}</div>
         </div>
 
         <div className="bg-white dark:bg-[#142024] p-5 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs space-y-1 transition-colors">
@@ -429,17 +404,21 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
           </div>
           <div className="text-3xl font-extrabold font-mono text-emerald-700 dark:text-emerald-400">{eligibleCohortCount}</div>
           <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">
-            {totalCohortCount > 0 ? Math.round((eligibleCohortCount / totalCohortCount) * 100) : 0}% Meets Min CGPA &ge; {policyMinCgpa}
+            {selectedMetricDrive
+              ? totalCohortCount === 0
+                ? 'No student records available'
+                : `${Math.round((eligibleCohortCount / totalCohortCount) * 100)}% eligible for ${selectedMetricDrive.companyName}`
+              : activeDrives.length === 0 ? 'No active drive' : 'No student records available'}
           </div>
         </div>
 
         <div className="bg-white dark:bg-[#142024] p-5 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs space-y-1 transition-colors">
           <div className="flex items-center justify-between text-[#687572] dark:text-[#94A3B8]">
-            <span className="text-xs font-medium">High-Tier Ready (&gt;8.5 CGPA)</span>
+            <span className="text-xs font-medium">High-Tier Ready</span>
             <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-3xl font-extrabold font-mono text-[#58BDB2]">{highTierReadyCount}</div>
-          <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">0 Backlogs & Super-Dream Eligible</div>
+          <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">{totalCohortCount === 0 ? 'No student records available' : 'Readiness service: High Placement Readiness'}</div>
         </div>
 
         <div className="bg-white dark:bg-[#142024] p-5 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs space-y-1 transition-colors">
@@ -447,9 +426,9 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
             <span className="text-xs font-medium">Active Campus Drives</span>
             <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-3xl font-extrabold font-mono text-[#263238] dark:text-[#F1F5F9]">{drives.length}</div>
+          <div className="text-3xl font-extrabold font-mono text-[#263238] dark:text-[#F1F5F9]">{activeDrives.length}</div>
           <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">
-            {applications.length} Candidate Applications Received
+            {activeDriveApplications.length === 0 ? '0 Applications' : `${activeDriveApplications.length} Applications`}
           </div>
         </div>
       </div>
@@ -811,7 +790,7 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-[#687572] dark:text-[#94A3B8]">
                         <Users className="w-8 h-8 text-[#58BDB2] opacity-40 mx-auto mb-2" />
-                        <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">No Student Applications Found</div>
+                        <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">No student applications yet.</div>
                         <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1 max-w-sm mx-auto">
                           When students submit applications to scheduled campus drives from their workspace, they will appear here for review and stage advancement.
                         </p>
@@ -846,6 +825,11 @@ export const TnpPortal: React.FC<Props> = ({ currentUser }) => {
                             <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">
                               Backlogs: {studentRecord?.Backlogs ?? 0} · {studentRecord?.Branch?.split('&')[0]}
                             </div>
+                            {studentRecord && (
+                              <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">
+                                Readiness: {readinessService.evaluateStudentReadiness(studentRecord).tier}
+                              </div>
+                            )}
                           </td>
                           <td className="py-3 px-4">
                             <span

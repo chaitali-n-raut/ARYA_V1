@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, StudentRecord, ImportPreviewRow, ImportSummary } from '../../types';
+import { User, StudentDataset, StudentRecord, ImportPreviewRow, ImportSummary } from '../../types';
 import { studentService } from '../../services/studentService';
 import { csvParserService } from '../../services/csvParserService';
 import { readinessService } from '../../services/readinessService';
+import { placementService } from '../../services/placementService';
 import {
   Users,
   Search,
@@ -18,7 +19,8 @@ import {
   Plus,
   RefreshCw,
   X,
-  FileDown
+  FileDown,
+  Trash2
 } from 'lucide-react';
 
 interface Props {
@@ -26,14 +28,16 @@ interface Props {
 }
 
 export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
-  const [students, setStudents] = useState<StudentRecord[]>(studentService.getAllStudents());
+  const [students, setStudents] = useState<StudentRecord[]>(studentService.getStudentsForFaculty(currentUser));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedSection, setSelectedSection] = useState('all');
   const [backlogFilter, setBacklogFilter] = useState<'all' | 'zero' | 'active'>('all');
   
   // Default to 'import' so faculty can first upload spreadsheet
-  const [activeTab, setActiveTab] = useState<'import' | 'roster'>('import');
+  const [activeTab, setActiveTab] = useState<'import' | 'roster' | 'datasets'>('import');
+  const [datasets, setDatasets] = useState<StudentDataset[]>(studentService.getDatasetsUploadedBy(currentUser.id));
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
 
   // Selected student for detail view / mentoring modal
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
@@ -47,9 +51,11 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
   const [importSummary, setImportSummary] = useState<ImportSummary | null>(null);
   const [importCompleted, setImportCompleted] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [datasetError, setDatasetError] = useState<string | null>(null);
 
   // Filtering logic
-  const filteredStudents = students.filter((s) => {
+  const rosterStudents = selectedDatasetId ? studentService.getStudentsInDataset(selectedDatasetId) : students;
+  const filteredStudents = rosterStudents.filter((s) => {
     const matchesSearch =
       s.Full_Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.Student_ID.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -66,6 +72,11 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
 
     return matchesSearch && matchesBranch && matchesSection && matchesBacklog;
   });
+  const assignedStudents = studentService.getAssignedStudentsForFaculty(currentUser);
+  const assignedStudentIds = new Set(assignedStudents.map((student) => student.Student_ID.trim().toUpperCase()));
+  const placementApplications = placementService.getAllApplications().filter((application) =>
+    assignedStudentIds.has(application.studentId.trim().toUpperCase())
+  );
 
   // Download template
   const handleDownloadCsvTemplate = () => {
@@ -114,23 +125,47 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
 
     try {
       const validRecords = previewRows
-        .filter((r) => r.status !== 'error' && r.rawRecord && r.rawRecord.Student_ID)
-        .map((r) => r.rawRecord as StudentRecord);
+        .filter((r) => (r.status === 'valid' || r.status === 'warning') && r.rawRecord && r.rawRecord.Student_ID)
+        .map((r) => {
+          const record = r.rawRecord as StudentRecord;
+          const mentor = record.Mentor?.trim().toLowerCase();
+          const matchesCurrentFaculty = [currentUser.name, currentUser.email, currentUser.id]
+            .some((identity) => identity.trim().toLowerCase() === mentor);
+          return {
+            ...record,
+            assignedFacultyId: record.assignedFacultyId || (matchesCurrentFaculty ? currentUser.id : undefined)
+          };
+        });
 
-      const result = studentService.importStudents(validRecords);
+      const dataset = studentService.createDatasetImport(fileName, currentUser.name, currentUser.id, validRecords);
 
       // Refresh local state
-      setStudents(studentService.getAllStudents());
+      setStudents(studentService.getStudentsForFaculty(currentUser));
+      setDatasets(studentService.getDatasetsUploadedBy(currentUser.id));
       setImportCompleted(true);
 
       if (importSummary) {
         setImportSummary({
           ...importSummary,
-          importedCount: result.added + result.updated
+          importedCount: dataset.recordCount
         });
       }
     } catch (err: any) {
       setImportError(err.message || 'An error occurred during student import.');
+    }
+  };
+
+  const handleDeleteDataset = (dataset: StudentDataset) => {
+    if (!window.confirm('Delete this dataset and its imported student records?')) return;
+    try {
+      const deleted = studentService.deleteDataset(dataset.datasetId, currentUser.id);
+      if (!deleted) return;
+      setDatasets(studentService.getDatasetsUploadedBy(currentUser.id));
+      setStudents(studentService.getStudentsForFaculty(currentUser));
+      setSelectedDatasetId((currentId) => currentId === dataset.datasetId ? null : currentId);
+      setSelectedStudent((current) => current?.datasetId === dataset.datasetId ? null : current);
+    } catch (error) {
+      setDatasetError(error instanceof Error ? error.message : 'Failed to delete the student dataset.');
     }
   };
 
@@ -157,7 +192,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
     const updated = studentService.getStudentById(selectedStudent.Student_ID);
     if (updated) {
       setSelectedStudent(updated);
-      setStudents(studentService.getAllStudents());
+      setStudents(studentService.getStudentsForFaculty(currentUser));
     }
 
     setNewMentorNote('');
@@ -177,7 +212,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
             </span>
           </div>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1">
-            Logged in as <strong className="text-[#263238] dark:text-[#F1F5F9]">{currentUser.name}</strong> · Monitoring assigned mentees and batch readiness.
+            Logged in as <strong className="text-[#263238] dark:text-[#F1F5F9]">{currentUser.name}</strong> · Monitoring accessible student records and batch readiness.
           </p>
         </div>
 
@@ -205,12 +240,38 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
             <Users className="w-3.5 h-3.5" />
             <span>2. Student Roster ({students.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab('datasets')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+              activeTab === 'datasets'
+                ? 'bg-[#58BDB2] text-white shadow-xs font-bold'
+                : 'text-[#687572] dark:text-[#94A3B8] hover:text-[#263238] dark:hover:text-[#F1F5F9]'
+            }`}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>3. Student Datasets ({datasets.length})</span>
+          </button>
         </div>
       </div>
 
       {/* ---------------- TAB 1: ROSTER VIEW ---------------- */}
       {activeTab === 'roster' && (
         <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-bold text-[#263238] dark:text-[#F1F5F9]">
+              {selectedDatasetId
+                ? `Dataset: ${datasets.find((dataset) => dataset.datasetId === selectedDatasetId)?.fileName || 'Selected dataset'}`
+                : 'Assigned Student Roster'}
+            </h2>
+            {selectedDatasetId && (
+              <button
+                onClick={() => setSelectedDatasetId(null)}
+                className="text-xs font-semibold text-[#2EA396] dark:text-[#58BDB2] hover:underline"
+              >
+                Back to assigned roster
+              </button>
+            )}
+          </div>
           {/* Filter Bar */}
           <div className="bg-white dark:bg-[#142024] p-4 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs transition-colors">
             <div className="flex items-center gap-2 flex-1 min-w-[240px]">
@@ -219,7 +280,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by student name, ID (e.g. STU-2026-001), or email..."
+                placeholder="Search accessible students by name, ID, or email..."
                 className="w-full bg-transparent focus:outline-none text-[#263238] dark:text-[#F1F5F9] placeholder:text-[#687572] dark:placeholder:text-[#94A3B8]"
               />
             </div>
@@ -268,10 +329,13 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                 <thead className="bg-[#F7FBFB] dark:bg-[#0E171A] border-b border-[#E4ECEA] dark:border-[#1F333A] text-[#687572] dark:text-[#94A3B8] font-semibold">
                   <tr>
                     <th className="py-3 px-4">Student ID & Name</th>
+                    <th className="py-3 px-4">Email</th>
                     <th className="py-3 px-4">Branch & Section</th>
                     <th className="py-3 px-4 text-center">CGPA</th>
                     <th className="py-3 px-4 text-center">Attendance</th>
                     <th className="py-3 px-4 text-center">Backlogs</th>
+                    <th className="py-3 px-4">Faculty / Mentor</th>
+                    <th className="py-3 px-4">Dataset</th>
                     <th className="py-3 px-4 text-center">Readiness Tier</th>
                     <th className="py-3 px-4 text-center">DSA Solved</th>
                     <th className="py-3 px-4 text-right">Actions</th>
@@ -280,19 +344,25 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                 <tbody className="divide-y divide-[#E4ECEA] dark:divide-[#1F333A]">
                   {filteredStudents.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-[#687572] dark:text-[#94A3B8]">
-                        No student records match the active search and filter criteria.
+                      <td colSpan={11} className="py-8 text-center text-[#687572] dark:text-[#94A3B8]">
+                        {selectedDatasetId && rosterStudents.length === 0
+                          ? 'No student records found in this dataset.'
+                          : !selectedDatasetId && students.length === 0
+                            ? 'No students are currently available in your roster.'
+                            : 'No student records match the active search and filter criteria.'}
                       </td>
                     </tr>
                   ) : (
                     filteredStudents.map((stu) => {
                       const readiness = readinessService.evaluateStudentReadiness(stu);
+                      const dataset = stu.datasetId ? studentService.getDatasetById(stu.datasetId) : null;
                       return (
                         <tr key={stu.Student_ID} className="hover:bg-[#F7FBFB] dark:hover:bg-[#18262B] transition-colors">
                           <td className="py-3 px-4">
                             <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">{stu.Full_Name}</div>
                             <div className="text-[11px] font-mono text-[#687572] dark:text-[#94A3B8]">{stu.Student_ID}</div>
                           </td>
+                          <td className="py-3 px-4 text-[#687572] dark:text-[#94A3B8]">{stu.Email || '—'}</td>
                           <td className="py-3 px-4">
                             <div className="text-[#263238] dark:text-[#F1F5F9]">{stu.Branch}</div>
                             <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">Section: {stu.Section}</div>
@@ -313,6 +383,12 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                             >
                               {stu.Backlogs}
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-[#687572] dark:text-[#94A3B8]">
+                            {stu.Mentor || stu.assignedFacultyId || 'Unassigned'}
+                          </td>
+                          <td className="py-3 px-4 text-[#687572] dark:text-[#94A3B8]">
+                            {dataset?.fileName || stu.datasetId || '—'}
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span
@@ -346,6 +422,108 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
               </table>
             </div>
           </div>
+
+          <div className="bg-white dark:bg-[#142024] rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs overflow-hidden transition-colors">
+            <div className="p-5 border-b border-[#E4ECEA] dark:border-[#1F333A]">
+              <h2 className="text-base font-bold text-[#263238] dark:text-[#F1F5F9]">Assigned Students’ Placement Activity</h2>
+              <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1">Applications and readiness for students assigned to you.</p>
+            </div>
+            {students.length === 0 ? (
+              <p className="p-8 text-center text-xs text-[#687572] dark:text-[#94A3B8]">No students are currently assigned to you.</p>
+            ) : placementApplications.length === 0 ? (
+              <p className="p-8 text-center text-xs text-[#687572] dark:text-[#94A3B8]">No student applications yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F7FBFB] dark:bg-[#0E171A] text-[#687572] dark:text-[#94A3B8] font-semibold">
+                    <tr>
+                      <th className="py-3 px-4">Assigned Student</th>
+                      <th className="py-3 px-4">Company & Drive</th>
+                      <th className="py-3 px-4">Applied</th>
+                      <th className="py-3 px-4">Academic & Readiness</th>
+                      <th className="py-3 px-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E4ECEA] dark:divide-[#1F333A]">
+                    {placementApplications.map((application) => {
+                      const student = students.find((record) => record.Student_ID.trim().toUpperCase() === application.studentId.trim().toUpperCase());
+                      if (!student) return null;
+                      const readiness = readinessService.evaluateStudentReadiness(student);
+                      const drive = placementService.getDriveById(application.driveId);
+                      return (
+                        <tr key={application.applicationId || application.id}>
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">{student.Full_Name}</div>
+                            <div className="font-mono text-[11px] text-[#687572] dark:text-[#94A3B8]">{student.Student_ID}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">{drive?.companyName || application.companyName}</div>
+                            <div className="text-[11px] text-[#58BDB2]">{drive?.role || application.role}</div>
+                          </td>
+                          <td className="py-3 px-4 text-[#687572] dark:text-[#94A3B8]">{application.appliedDate}</td>
+                          <td className="py-3 px-4">
+                            <div>CGPA {student.CGPA.toFixed(2)} · {student.Backlogs} backlogs · {student.Branch}</div>
+                            <div className="text-[11px] text-[#687572] dark:text-[#94A3B8]">{readiness.tier} ({readiness.overallScore}%)</div>
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-[#2EA396] dark:text-[#58BDB2]">{application.status}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'datasets' && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#263238] dark:text-[#F1F5F9]">Imported Student Datasets</h2>
+            <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1">View or remove CSV imports and their linked student records.</p>
+          </div>
+          {datasetError && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-xs text-red-800 dark:text-red-300">
+              {datasetError}
+            </div>
+          )}
+          {datasets.length === 0 ? (
+            <div className="bg-white dark:bg-[#142024] p-12 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] text-center text-sm font-semibold text-[#687572] dark:text-[#94A3B8]">
+              No student datasets uploaded yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {datasets.map((dataset) => (
+                <div key={dataset.datasetId} className="bg-white dark:bg-[#142024] p-5 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#263238] dark:text-[#F1F5F9]">{dataset.fileName}</h3>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#687572] dark:text-[#94A3B8]">
+                      <span>{new Date(dataset.uploadedAt).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>Uploaded by {dataset.uploadedBy}</span>
+                      <span>{dataset.recordCount} students</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setSelectedDatasetId(dataset.datasetId); setActiveTab('roster'); }}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[#58BDB2]/50 text-[#2EA396] dark:text-[#58BDB2] hover:bg-[#EAF7F8] dark:hover:bg-[#122D29]"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      View Records
+                    </button>
+                    <button
+                      onClick={() => handleDeleteDataset(dataset)}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete Dataset
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -380,10 +558,11 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
             <div className="p-4 bg-[#F7FBFB] dark:bg-[#0E171A] rounded-xl border border-[#E4ECEA] dark:border-[#1F333A] text-xs space-y-2">
               <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">Mandatory Columns & Validation Criteria:</div>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[#687572] dark:text-[#94A3B8] text-[11px]">
-                <li>• <strong>Student_ID</strong>: Required primary unique key (e.g. STU-2026-001).</li>
+                <li>• <strong>Student_ID</strong>: Required primary unique key.</li>
                 <li>• <strong>Full_Name, Email</strong>: Valid institutional name and RFC 5322 email.</li>
                 <li>• <strong>CGPA, Attendance</strong>: CGPA (0.0 to 10.0), Attendance (0 to 100%).</li>
                 <li>• <strong>Backlogs</strong>: Non-negative integer (0, 1, 2...).</li>
+                <li>• <strong>Mentor / Assigned_Faculty_ID</strong>: Assign a student by matching the mentor name to your account or providing your faculty account ID.</li>
                 <li>• <strong>Technical_Skills, Certifications, Projects</strong>: Semicolon-separated values.</li>
               </ul>
             </div>
@@ -443,7 +622,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
 
                   <button
                     onClick={handleExecuteImport}
-                    disabled={importCompleted || importSummary.validCount + importSummary.existingCount === 0}
+                    disabled={importCompleted || importSummary.validCount + importSummary.warningCount === 0}
                     className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                       importCompleted
                         ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 cursor-default'
@@ -452,7 +631,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                   >
                     {importCompleted
                       ? `Import Complete (${importSummary.importedCount} Records Saved)`
-                      : `Import ${importSummary.validCount + importSummary.existingCount} Valid Records`}
+                      : `Import ${importSummary.validCount + importSummary.warningCount} Valid Records`}
                   </button>
                 </div>
               </div>
@@ -469,7 +648,7 @@ export const FacultyPortal: React.FC<Props> = ({ currentUser }) => {
                 </div>
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60">
                   <div className="text-xl font-bold text-blue-700 dark:text-blue-300 font-mono">{importSummary.existingCount}</div>
-                  <div className="text-[11px] text-blue-800 dark:text-blue-400">Updates Existing</div>
+                  <div className="text-[11px] text-blue-800 dark:text-blue-400">Duplicate IDs</div>
                 </div>
                 <div className="p-3 bg-amber-50 dark:bg-[#251A0E] rounded-xl border border-amber-200 dark:border-[#4B3518]">
                   <div className="text-xl font-bold text-amber-700 dark:text-amber-300 font-mono">{importSummary.warningCount}</div>

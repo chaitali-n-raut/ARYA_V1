@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, StudentRecord, UserRole } from './types';
 import { authService } from './services/authService';
+import { authApiService } from './services/authApiService';
 import { studentService } from './services/studentService';
 import { placementService } from './services/placementService';
 
@@ -49,12 +50,22 @@ export default function App() {
 
   // Authorization barrier alert
   const [authBarrierMessage, setAuthBarrierMessage] = useState<string | null>(null);
+  const [loginStatusMessage, setLoginStatusMessage] = useState<string | null>(null);
 
   // Unread notifications count
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   // Subscribe to auth state
   useEffect(() => {
+    if (authApiService.isConfigured()) {
+      void authApiService.getSession().then((result) => {
+        if (result.success && result.data.user.emailVerified) {
+          authService.setServerUser(result.data.user);
+        } else {
+          authService.setServerUser(null);
+        }
+      });
+    }
     const unsubscribe = authService.subscribe((user) => {
       setCurrentUser(user);
       if (user && user.isAuthenticated && user.role === 'student') {
@@ -146,6 +157,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (authApiService.isConfigured()) void authApiService.logout();
     authService.logout();
     setCurrentView('landing');
     setAuthBarrierMessage(null);
@@ -361,12 +373,22 @@ export default function App() {
         initialMode={authMode}
         initialRole={authDefaultRole}
         onClose={() => setAuthModalOpen(false)}
+        onLoginStatus={setLoginStatusMessage}
         onSuccess={(authenticatedRole) => {
           // Immediately redirect to the authorized role page
           setCurrentView(authenticatedRole);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
+
+      {loginStatusMessage && (
+        <div role="status" className="fixed bottom-5 right-5 z-[60] max-w-sm rounded-xl border border-[#58BDB2]/30 bg-white dark:bg-[#142024] px-4 py-3 text-xs text-[#263238] dark:text-[#F1F5F9] shadow-lg">
+          <div className="flex items-start justify-between gap-3">
+            <span>{loginStatusMessage}</span>
+            <button type="button" onClick={() => setLoginStatusMessage(null)} aria-label="Dismiss login status" className="text-[#687572] hover:text-[#263238]">×</button>
+          </div>
+        </div>
+      )}
 
       <ResearchModal
         isOpen={researchModalOpen}

@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { UserRole } from '../../types';
 import { authService } from '../../services/authService';
+import { authApiService } from '../../services/authApiService';
 import {
   X,
-  CheckCircle,
   GraduationCap,
   Users,
   Building2,
   Briefcase,
   ShieldCheck,
   ArrowRight,
-  ChevronDown,
-  ChevronUp,
   AlertCircle
 } from 'lucide-react';
 
@@ -21,6 +19,7 @@ interface Props {
   initialRole?: UserRole;
   onClose: () => void;
   onSuccess: (role: UserRole) => void;
+  onLoginStatus?: (message: string) => void;
 }
 
 export const AuthModal: React.FC<Props> = ({
@@ -28,28 +27,19 @@ export const AuthModal: React.FC<Props> = ({
   initialMode,
   initialRole,
   onClose,
-  onSuccess
+  onSuccess,
+  onLoginStatus
 }) => {
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode);
+  const [mode, setMode] = useState<'login' | 'register' | 'verify' | 'forgot' | 'reset'>(initialMode);
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole || 'student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [studentId, setStudentId] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [department, setDepartment] = useState('Computer Science and Engineering');
-
-  // Optional student fields during registration (all default to 0)
-  const [showOptionalFields, setShowOptionalFields] = useState(false);
-  const [initialCgpa, setInitialCgpa] = useState('');
-  const [initialLeetcode, setInitialLeetcode] = useState('');
-  const [initialCodechef, setInitialCodechef] = useState('');
-  const [initialAptitude, setInitialAptitude] = useState('');
-  const [initialCommunication, setInitialCommunication] = useState('');
-  const [initialTargetRole, setInitialTargetRole] = useState('');
-
   const [error, setError] = useState<string | null>(null);
-  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [formNotice, setFormNotice] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Sync when initialRole changes
   React.useEffect(() => {
@@ -62,72 +52,196 @@ export const AuthModal: React.FC<Props> = ({
   React.useEffect(() => {
     setMode(initialMode);
     setError(null);
+    setFormNotice(null);
   }, [initialMode]);
+
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => setResendCooldown((remaining) => Math.max(0, remaining - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFormNotice(null);
 
     if (mode === 'forgot') {
-      if (!email) {
-        setError('Please enter your email address.');
+      const result = await authApiService.requestPasswordReset({ email: email.trim().toLowerCase() });
+      if (!result.success) {
+        setError(result.error);
         return;
       }
-      setForgotSuccess(true);
+      if (result.data.deliveryStatus !== 'sent') {
+        setError(result.data.deliveryStatus === 'not_configured'
+          ? 'Password reset service is not configured. No reset email was sent.'
+          : 'Password reset email could not be sent. Please try again later.');
+        return;
+      }
+      setPendingEmail(email.trim().toLowerCase());
+      setFormNotice('Password reset instructions were sent to the account email.');
+      setMode('reset');
+      return;
+    }
+
+    if (mode === 'reset') {
+      if (!/^\d{6}$/.test(verificationCode)) {
+        setError('Enter the 6-digit reset code from your email.');
+        return;
+      }
+      if (password.length < 8) {
+        setError('New password must be at least 8 characters.');
+        return;
+      }
+      const result = await authApiService.resetPassword({
+        email: pendingEmail,
+        code: verificationCode,
+        newPassword: password
+      });
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      if (!result.data.passwordReset) {
+        setError('Password reset could not be confirmed. Check the code or request a new one.');
+        return;
+      }
+      setPassword('');
+      setVerificationCode('');
+      setFormNotice('Password updated. Sign in with your new password.');
+      setMode('login');
+      return;
+    }
+
+    if (mode === 'verify') {
+      if (!/^\d{6}$/.test(verificationCode)) {
+        setError('Enter the 6-digit code sent to your email.');
+        return;
+      }
+      const result = await authApiService.verifyEmail({ email: pendingEmail, code: verificationCode });
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      if (!result.data.emailVerified) {
+        setError('Please verify your email before signing in.');
+        return;
+      }
+      setVerificationCode('');
+      setPassword('');
+      setFormNotice('Email verified. You can now sign in. Email verification confirms email control only, not institutional role identity.');
+      setMode('login');
       return;
     }
 
     if (mode === 'login') {
+      if (authApiService.isConfigured()) {
+        const result = await authApiService.login({ email: email.trim().toLowerCase(), password, role: selectedRole });
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+        if (!result.data.emailVerified || !result.data.user.emailVerified) {
+          setError('Please verify your email before signing in.');
+          return;
+        }
+        authService.setServerUser(result.data.user);
+        onLoginStatus?.(result.data.loginNotificationStatus === 'sent'
+          ? 'Login notification email was sent to your verified address.'
+          : result.data.loginNotificationStatus === 'not_configured'
+            ? 'Login notification service is not configured.'
+            : 'Login notification email could not be sent.');
+        onSuccess(result.data.user.role);
+        setPassword('');
+        onClose();
+        return;
+      }
+
+      // Preserve existing local accounts for the prototype; this does not verify email ownership.
       const res = authService.loginWithCredentials(email, password, selectedRole);
       if (!res.success) {
         setError(res.error || 'Authentication failed. Please verify credentials.');
         return;
       }
-
+      onLoginStatus?.('Prototype login succeeded. Email ownership is not verified, and login notification service is not configured.');
       onSuccess(res.user!.role);
+      setPassword('');
       onClose();
-    } else {
-      // Register new user
-      if (!fullName.trim()) {
-        setError('Full legal name is required.');
-        return;
-      }
-      if (!email.trim()) {
-        setError('Email address is required.');
-        return;
-      }
-      if (!password || password.length < 4) {
-        setError('Password must be at least 4 characters long.');
-        return;
-      }
-
-      const res = authService.registerUser({
-        name: fullName.trim(),
-        email: email.trim(),
-        password: password,
-        role: selectedRole,
-        studentId: selectedRole === 'student' ? studentId.trim() || undefined : undefined,
-        organization: selectedRole === 'recruiter' ? organization.trim() || undefined : undefined,
-        department: (selectedRole === 'student' || selectedRole === 'faculty') ? department : undefined,
-        // Pass optional initial numerical metrics (authService defaults these to 0)
-        initialCgpa: initialCgpa ? parseFloat(initialCgpa) : 0,
-        initialLeetcode: initialLeetcode ? parseInt(initialLeetcode, 10) : 0,
-        initialCodechef: initialCodechef ? parseInt(initialCodechef, 10) : 0,
-        initialAptitude: initialAptitude ? parseInt(initialAptitude, 10) : 0,
-        initialCommunication: initialCommunication ? parseFloat(initialCommunication) : 0,
-        initialTargetRole: initialTargetRole.trim() || undefined
-      });
-
-      if (!res.success) {
-        setError(res.error || 'Registration failed.');
-        return;
-      }
-
-      onSuccess(selectedRole);
-      onClose();
+      return;
     }
+
+    if (mode === 'register') {
+      if (!fullName.trim() || !email.trim()) {
+        setError(!fullName.trim() ? 'Full name is required.' : 'Email address is required.');
+        return;
+      }
+      if (!password || password.length < 8) {
+        setError('Password must be at least 8 characters.');
+        return;
+      }
+      if (!authApiService.isConfigured()) {
+        const result = authService.registerUser({
+          name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          role: selectedRole
+        });
+        setPassword('');
+        if (!result.success) {
+          setError(result.error || 'Unable to create this local demo account.');
+          return;
+        }
+        onLoginStatus?.('Local Demo Authentication: this account and session are stored in browser localStorage. Real email verification requires backend configuration.');
+        onSuccess(result.user!.role);
+        onClose();
+        return;
+      }
+
+      const result = await authApiService.register({
+        name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role: selectedRole
+      });
+      setPassword('');
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      if (result.data.deliveryStatus !== 'sent') {
+        setError(result.data.deliveryStatus === 'not_configured'
+          ? 'Email verification service is not configured. No email was sent and no account was activated.'
+          : 'Verification email could not be sent. No account was activated. Please try again later.');
+        return;
+      }
+      setPendingEmail(email.trim().toLowerCase());
+      setVerificationCode('');
+      setResendCooldown(Math.max(0, result.data.resendAfterSeconds ?? 60));
+      setFormNotice(`Verification code sent to ${email.trim().toLowerCase()}.`);
+      setMode('verify');
+      return;
+    }
+
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0) return;
+    setError(null);
+    const result = await authApiService.resendVerification({ email: pendingEmail });
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    if (result.data.deliveryStatus !== 'sent') {
+      setError(result.data.deliveryStatus === 'not_configured'
+        ? 'Email verification service is not configured. No code was sent.'
+        : 'A new verification email could not be sent.');
+      return;
+    }
+    setResendCooldown(Math.max(0, result.data.resendAfterSeconds ?? 60));
+    setFormNotice(`A new verification code was sent to ${pendingEmail}.`);
   };
 
   return (
@@ -137,14 +251,23 @@ export const AuthModal: React.FC<Props> = ({
         <div className="px-6 py-4 border-b border-[#E4ECEA] dark:border-[#1F333A] flex items-center justify-between bg-[#F7FBFB] dark:bg-[#0E171A]">
           <div>
             <h3 className="text-lg font-bold text-[#263238] dark:text-[#F1F5F9]">
-              {mode === 'login' ? 'Sign In to ARYA AI' : mode === 'register' ? 'Register New Account' : 'Reset Password'}
+              {mode === 'login' ? 'Sign In to ARYA AI'
+                : mode === 'register' ? 'Register New Account'
+                  : mode === 'verify' ? 'Verify Email Address'
+                    : mode === 'reset' ? 'Set a New Password' : 'Reset Password'}
             </h3>
             <p className="text-xs text-[#687572] dark:text-[#94A3B8]">
               {mode === 'login'
-                ? `Enter your registered credentials to open ${selectedRole.toUpperCase()} workspace`
+                ? authApiService.isConfigured()
+                  ? `Sign in to your ${selectedRole.toUpperCase()} account`
+                  : 'Prototype login; email ownership is not verified in this mode'
                 : mode === 'register'
-                ? `Create a verified ${selectedRole.toUpperCase()} account in the database`
-                : 'Enter your email to receive a password reset link'}
+                  ? `Request a ${selectedRole.toUpperCase()} account and email verification`
+                  : mode === 'verify'
+                    ? `Enter the 6-digit code sent to ${pendingEmail}`
+                    : mode === 'reset'
+                      ? `Enter the reset code sent to ${pendingEmail}`
+                      : 'Request a password reset email'}
             </p>
           </div>
           <button
@@ -157,7 +280,13 @@ export const AuthModal: React.FC<Props> = ({
 
         {/* Modal Body */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
-          {mode !== 'forgot' && (
+          {!authApiService.isConfigured() && (
+            <div className="mb-4 p-3 rounded-xl border border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 text-[11px] text-amber-900 dark:text-amber-200">
+              <strong>Local Demo Authentication</strong><br />
+              Prototype mode — accounts are stored locally for demonstration. Real email verification will be enabled when the authentication backend is connected.
+            </div>
+          )}
+          {(mode === 'login' || mode === 'register') && (
             <div className="mb-5">
               <label className="block text-xs font-semibold text-[#263238] dark:text-[#F1F5F9] mb-2">
                 Select Your Role Portal
@@ -191,12 +320,18 @@ export const AuthModal: React.FC<Props> = ({
             </div>
           )}
 
+          {formNotice && (
+            <div className="mb-4 p-3 rounded-xl border border-[#58BDB2]/30 bg-[#EAF7F8] dark:bg-[#122D29] text-xs text-[#263238] dark:text-[#F1F5F9]">
+              {formNotice}
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-3.5 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs rounded-xl border border-red-200 dark:border-red-800/60 leading-relaxed space-y-2">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Access Denied:</strong> {error}
+                  <strong>Request failed:</strong> {error}
                 </div>
               </div>
               {mode === 'login' && error.toLowerCase().includes('not found') && (
@@ -215,26 +350,7 @@ export const AuthModal: React.FC<Props> = ({
             </div>
           )}
 
-          {forgotSuccess ? (
-            <div className="text-center py-6">
-              <CheckCircle className="w-12 h-12 text-[#58BDB2] mx-auto mb-3" />
-              <h4 className="text-base font-bold text-[#263238] dark:text-[#F1F5F9]">Reset Link Sent</h4>
-              <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-1 max-w-xs mx-auto">
-                We have dispatched a password reset link to <strong>{email}</strong>.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setForgotSuccess(false);
-                  setMode('login');
-                }}
-                className="mt-4 px-4 py-2 text-xs font-semibold bg-[#58BDB2] text-white rounded-lg hover:bg-[#48a99f] transition-colors cursor-pointer shadow-xs"
-              >
-                Back to Sign In
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
               {mode === 'register' && (
                 <div>
                   <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">Full Name *</label>
@@ -249,51 +365,7 @@ export const AuthModal: React.FC<Props> = ({
                 </div>
               )}
 
-              {selectedRole === 'student' && mode === 'register' && (
-                <div>
-                  <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">
-                    Student Roll Number / University ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value.toUpperCase())}
-                    placeholder="e.g. 2026-CSE-042"
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
-                  />
-                </div>
-              )}
-
-              {selectedRole === 'recruiter' && mode === 'register' && (
-                <div>
-                  <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">Company / Organization *</label>
-                  <input
-                    type="text"
-                    required
-                    value={organization}
-                    onChange={(e) => setOrganization(e.target.value)}
-                    placeholder="e.g. Acme Corporation"
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
-                  />
-                </div>
-              )}
-
-              {selectedRole === 'faculty' && mode === 'register' && (
-                <div>
-                  <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">Academic Department *</label>
-                  <input
-                    type="text"
-                    required
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="e.g. Computer Science and Engineering"
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
-                  />
-                </div>
-              )}
-
-              <div>
+              {(mode === 'login' || mode === 'register' || mode === 'forgot') && <div>
                 <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">Email Address *</label>
                 <input
                   type="email"
@@ -303,12 +375,46 @@ export const AuthModal: React.FC<Props> = ({
                   placeholder="your.email@university.edu"
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
                 />
-              </div>
+              </div>}
 
-              {mode !== 'forgot' && (
+              {(mode === 'verify' || mode === 'reset') && (
+                <div>
+                  <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">Code sent to</label>
+                  <div className="text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]">{pendingEmail}</div>
+                </div>
+              )}
+
+              {(mode === 'verify' || mode === 'reset') && (
+                <div>
+                  <label className="block text-xs font-medium text-[#263238] dark:text-[#F1F5F9] mb-1">6-digit {mode === 'verify' ? 'verification' : 'password reset'} code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    required
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
+                  />
+                  {mode === 'verify' && (
+                    <div className="mt-2 flex items-center justify-between text-[11px]">
+                      <button type="button" onClick={handleResendVerification} disabled={resendCooldown > 0} className="text-[#2EA396] dark:text-[#58BDB2] disabled:text-[#94A3B8] disabled:cursor-not-allowed">
+                        {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+                      </button>
+                      <button type="button" onClick={() => { setEmail(pendingEmail); setMode('register'); setError(null); setFormNotice(null); }} className="text-[#687572] dark:text-[#94A3B8] hover:underline">Change email</button>
+                    </div>
+                  )}
+                  {mode === 'reset' && <button type="button" onClick={() => { setEmail(pendingEmail); setMode('forgot'); setError(null); setFormNotice(null); }} className="mt-2 text-[11px] text-[#687572] dark:text-[#94A3B8] hover:underline">Request a new reset code</button>}
+                </div>
+              )}
+
+              {(mode === 'login' || mode === 'register' || mode === 'reset') && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-[#263238] dark:text-[#F1F5F9]">Password *</label>
+                    <label className="text-xs font-medium text-[#263238] dark:text-[#F1F5F9]">{mode === 'reset' ? 'New Password *' : 'Password *'}</label>
                     {mode === 'login' && (
                       <button
                         type="button"
@@ -324,101 +430,10 @@ export const AuthModal: React.FC<Props> = ({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    minLength={mode === 'login' ? 4 : 8}
+                    placeholder={mode === 'reset' ? 'Choose a new password' : 'Enter your password'}
                     className="w-full text-xs px-3 py-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A] focus:outline-none focus:border-[#58BDB2] bg-[#F7FBFB] dark:bg-[#0E171A] text-[#263238] dark:text-[#F1F5F9]"
                   />
-                </div>
-              )}
-
-              {/* Optional Student Information Section During Registration */}
-              {mode === 'register' && selectedRole === 'student' && (
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowOptionalFields(!showOptionalFields)}
-                    className="flex items-center gap-1.5 text-xs text-[#2EA396] dark:text-[#58BDB2] hover:underline font-semibold cursor-pointer"
-                  >
-                    <span>{showOptionalFields ? 'Hide Optional Initial Scores' : '+ Optional: Enter LeetCode / CodeChef / Aptitude Now (Defaults to 0)'}</span>
-                    {showOptionalFields ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-
-                  {showOptionalFields && (
-                    <div className="mt-2.5 p-3.5 rounded-xl bg-[#F7FBFB] dark:bg-[#0E171A] border border-[#E4ECEA] dark:border-[#1F333A] grid grid-cols-2 gap-2.5 text-xs">
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">LeetCode Solved (Default: 0)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={initialLeetcode}
-                          onChange={(e) => setInitialLeetcode(e.target.value)}
-                          placeholder="0"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">CodeChef Solved (Default: 0)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={initialCodechef}
-                          onChange={(e) => setInitialCodechef(e.target.value)}
-                          placeholder="0"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">Cumulative GPA (Default: 0.0)</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="10"
-                          value={initialCgpa}
-                          onChange={(e) => setInitialCgpa(e.target.value)}
-                          placeholder="0.00"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">Aptitude Score % (Default: 0)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={initialAptitude}
-                          onChange={(e) => setInitialAptitude(e.target.value)}
-                          placeholder="0"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">Soft Skills (/10) (Default: 0)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          value={initialCommunication}
-                          onChange={(e) => setInitialCommunication(e.target.value)}
-                          placeholder="0"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-[#687572] dark:text-[#94A3B8] block mb-0.5">Target Role</label>
-                        <input
-                          type="text"
-                          value={initialTargetRole}
-                          onChange={(e) => setInitialTargetRole(e.target.value)}
-                          placeholder="e.g. Software Engineer"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#16272C] border border-[#E4ECEA] dark:border-[#1F333A] text-[#263238] dark:text-[#F1F5F9] rounded-lg text-xs"
-                        />
-                      </div>
-                      <div className="col-span-2 text-[10px] text-[#687572] dark:text-[#94A3B8] bg-white dark:bg-[#142024] p-2 rounded-lg border border-[#E4ECEA] dark:border-[#1F333A]">
-                        Note: All these values default to 0 if left blank. You can update them at any time after sign-in from your profile tab or by uploading your resume.
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -430,13 +445,16 @@ export const AuthModal: React.FC<Props> = ({
                   {mode === 'login'
                     ? `Sign In as ${selectedRole.toUpperCase()}`
                     : mode === 'register'
-                    ? `Register ${selectedRole.toUpperCase()} Account`
-                    : 'Send Reset Link'}
+                      ? `Request ${selectedRole.toUpperCase()} Account`
+                      : mode === 'verify'
+                        ? 'Verify Email'
+                        : mode === 'reset'
+                          ? 'Update Password'
+                          : 'Send Reset Link'}
                 </span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            </form>
-          )}
+          </form>
 
           {/* Toggle between Login and Register */}
           <div className="mt-5 pt-4 border-t border-[#E4ECEA] dark:border-[#1F333A] text-center text-xs text-[#687572] dark:text-[#94A3B8]">

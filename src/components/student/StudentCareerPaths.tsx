@@ -18,17 +18,21 @@ export const StudentCareerPaths: React.FC<Props> = ({ student, onNavigateTab }) 
         <div>
           <h2 className="text-xl font-bold text-[#263238] dark:text-[#F1F5F9]">Recommended Career Paths</h2>
           <p className="text-xs text-[#687572] dark:text-[#94A3B8] mt-0.5">
-            Data-driven role trajectories aligned with your academic standing, project portfolio, and technical proficiencies.
+            Rule-based alignment compares technical skills listed in your profile with a small role reference catalog. It does not predict career outcomes.
           </p>
         </div>
 
         <div className="text-[11px] bg-[#EAF7F8] dark:bg-[#133330] text-[#2EA396] dark:text-[#58BDB2] font-semibold px-3 py-1.5 rounded-xl border border-[#58BDB2]/30 dark:border-[#27665E]">
-          Ranked by Competency Fit
+          Ranked by Listed Skill Match
         </div>
       </div>
 
       {/* Role Cards List */}
-      <div className="space-y-4">
+      {careerPaths.length === 0 ? (
+        <div className="bg-white dark:bg-[#142024] p-6 rounded-2xl border border-[#E4ECEA] dark:border-[#1F333A] text-sm text-[#687572] dark:text-[#94A3B8]">
+          Add technical skills to your profile to see role alignment. Salary, labor-market outlook, and recruiter matching are not estimated by this frontend.
+        </div>
+      ) : <div className="space-y-4">
         {careerPaths.map((path, idx) => (
           <div
             key={path.id}
@@ -55,21 +59,21 @@ export const StudentCareerPaths: React.FC<Props> = ({ student, onNavigateTab }) 
             {/* Metrics & Market Context */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3 bg-[#F7FBFB] dark:bg-[#0E171A] rounded-xl border border-[#E4ECEA] dark:border-[#1F333A]">
-                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Indicative Salary Band</div>
+                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Salary estimate</div>
                 <div className="font-bold text-[#263238] dark:text-[#F1F5F9]">{path.salaryRange}</div>
-                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8] italic">Market Benchmark Guidance</div>
+                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8] italic">Not provided by this prototype</div>
               </div>
 
               <div className="p-3 bg-[#F7FBFB] dark:bg-[#0E171A] rounded-xl border border-[#E4ECEA] dark:border-[#1F333A]">
-                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Hiring Velocity</div>
+                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Labor-market outlook</div>
                 <div className="font-bold text-[#2EA396] dark:text-[#58BDB2]">{path.growthOutlook}</div>
-                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8]">Tier-1 & Enterprise Demand</div>
+                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8]">Not provided by this prototype</div>
               </div>
 
               <div className="p-3 bg-[#F7FBFB] dark:bg-[#0E171A] rounded-xl border border-[#E4ECEA] dark:border-[#1F333A]">
-                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Frequent Campus Recruiters</div>
-                <div className="font-medium text-[#263238] dark:text-[#F1F5F9] truncate">{path.typicalEmployers.join(', ')}</div>
-                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8]">Active Placement Partners</div>
+                <div className="text-[#687572] dark:text-[#94A3B8] text-[11px] mb-0.5">Campus recruiters</div>
+                <div className="font-medium text-[#263238] dark:text-[#F1F5F9] truncate">{path.typicalEmployers.length ? path.typicalEmployers.join(', ') : 'No partner data available'}</div>
+                <div className="text-[10px] text-[#687572] dark:text-[#94A3B8]">Use published placement drives for current opportunities</div>
               </div>
             </div>
 
@@ -122,7 +126,7 @@ export const StudentCareerPaths: React.FC<Props> = ({ student, onNavigateTab }) 
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 };

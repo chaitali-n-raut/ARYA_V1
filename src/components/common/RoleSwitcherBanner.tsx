@@ -1,7 +1,5 @@
 import React from 'react';
 import { User, UserRole } from '../../types';
-import { authService } from '../../services/authService';
-import { studentService } from '../../services/studentService';
 import { useTheme } from '../../context/ThemeContext';
 import {
   GraduationCap,
@@ -55,9 +53,7 @@ export const RoleSwitcherBanner: React.FC<Props> = ({
   };
 
   const handleClearSession = () => {
-    authService.clearAllSessionData();
-    studentService.resetToDefault();
-    window.location.reload();
+    onLogout();
   };
 
   const isDark = theme === 'dark';
@@ -86,7 +82,7 @@ export const RoleSwitcherBanner: React.FC<Props> = ({
             <div className="flex items-center gap-1.5 text-[#687572] dark:text-[#94A3B8]">
               <Lock className="w-3 h-3 text-amber-500" />
               <span className="text-[11px] font-medium">
-                Campus Gateway · Sign in or register to access verified role workspaces
+                Campus Gateway · Sign in or register to access role workspaces
               </span>
             </div>
           )}
@@ -112,7 +108,7 @@ export const RoleSwitcherBanner: React.FC<Props> = ({
                 title={
                   currentUser?.isAuthenticated && currentUser.role === r.role
                     ? `Open your ${r.label} portal`
-                    : `Sign in to verified ${r.label} portal`
+                    : `Sign in to your registered ${r.label} account`
                 }
               >
                 {r.icon}
@@ -166,7 +162,7 @@ export const RoleSwitcherBanner: React.FC<Props> = ({
 
           <button
             onClick={handleClearSession}
-            title="Reset active browser storage session"
+            title="Clear the current login session and reload; saved application data is retained"
             className="flex items-center gap-1 px-1.5 py-1 rounded-lg transition-colors text-xs cursor-pointer text-[#687572] dark:text-[#94A3B8] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-neutral-100 dark:hover:bg-[#1B2B30]"
           >
             <RotateCcw className="w-3 h-3" />

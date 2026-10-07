@@ -5,6 +5,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** True only when confirmed by the authentication server; absent for local prototype accounts. */
+  emailVerified?: boolean;
+  /** Prototype account credential only; must never be copied into the current-user session object. */
   password?: string;
   avatar?: string;
   department?: string;
@@ -16,6 +19,7 @@ export interface User {
 
 export interface StudentRecord {
   Student_ID: string;
+  datasetId?: string;
   Full_Name: string;
   Email: string;
   Phone: string;
@@ -47,6 +51,7 @@ export interface StudentRecord {
   Communication_Score: number; // 0 - 10 scale (default 0)
   Class_Teacher: string;
   Mentor: string;
+  assignedFacultyId?: string;
   Location: string;
   Target_Role?: string;
   Bio?: string;
@@ -55,6 +60,15 @@ export interface StudentRecord {
   isProfileCompleted?: boolean;
   ResumeUploaded?: boolean;
   ResumeFileName?: string;
+}
+
+export interface StudentDataset {
+  datasetId: string;
+  fileName: string;
+  uploadedAt: string;
+  uploadedBy: string;
+  uploadedById: string;
+  recordCount: number;
 }
 
 export interface ExtractedResumeData {
@@ -91,10 +105,9 @@ export interface DimensionScore {
   description: string;
 }
 
-export interface XAIFactor {
+export interface ReadinessFactor {
   name: string;
   impact: 'positive' | 'negative' | 'neutral';
-  contribution: number; // e.g. +14.5 or -8.2
   detail: string;
   actionableAdvice: string;
 }
@@ -104,11 +117,9 @@ export interface ReadinessEvaluation {
   tier: 'High Placement Readiness' | 'Moderate Readiness' | 'Early Stage' | 'Critical Intervention';
   tierColor: string;
   dimensions: DimensionScore[];
-  positiveFactors: XAIFactor[];
-  negativeFactors: XAIFactor[];
+  positiveFactors: ReadinessFactor[];
+  negativeFactors: ReadinessFactor[];
   explainabilitySummary: string;
-  modelConfidence: number;
-  isDemo: boolean;
 }
 
 export interface CareerPathRecommendation {
@@ -175,6 +186,7 @@ export interface PlacementDrive {
 
 export interface JobApplication {
   id: string;
+  applicationId: string;
   driveId: string;
   studentId: string;
   companyName: string;

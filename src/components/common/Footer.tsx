@@ -86,7 +86,7 @@ export const Footer: React.FC<Props> = ({ onNavigateRole, onOpenResearch }) => {
             <ul className="space-y-2 text-xs">
               <li className="text-[#687572] dark:text-[#94A3B8]">Explainable Readiness Score (XAI)</li>
               <li className="text-[#687572] dark:text-[#94A3B8]">Curated Skill-Gap Diagnostics</li>
-              <li className="text-[#687572] dark:text-[#94A3B8]">Role Trajectory & Salary Bands</li>
+              <li className="text-[#687572] dark:text-[#94A3B8]">Role alignment from listed skills</li>
               <li className="text-[#687572] dark:text-[#94A3B8]">Personalized Learning Roadmaps</li>
               <li className="text-[#687572] dark:text-[#94A3B8]">Two-Stage Recruiter Filtering</li>
               <li>
@@ -104,11 +104,11 @@ export const Footer: React.FC<Props> = ({ onNavigateRole, onOpenResearch }) => {
           <div>
             <h3 className="text-sm font-semibold text-[#263238] dark:text-[#F1F5F9] mb-3">Academic Integrity Notice</h3>
             <p className="text-xs leading-relaxed text-[#687572] dark:text-[#94A3B8] mb-3">
-              Readiness diagnostics and explainable scoring are computed directly from verified student records, course credentials, coding assessments, and mentor observations without hardcoded assumptions.
+              Readiness diagnostics use a deterministic weighted rule set over available student record fields. They are decision support, not trained-model predictions; SHAP/LIME integration is planned.
             </p>
             <div className="flex items-center gap-2 text-xs text-[#263238] dark:text-[#F1F5F9]">
               <ShieldCheck className="w-4 h-4 text-[#58BDB2]" />
-              <span>Ethical AI · SHAP/LIME Explainability</span>
+              <span>Readiness Decision Support � Model integration planned</span>
             </div>
           </div>
         </div>

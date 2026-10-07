@@ -1,15 +1,7 @@
-import { StudentRecord } from '../types';
+import { StudentDataset, StudentRecord, User } from '../types';
 
 const STORAGE_KEY = 'arya_ai_students_db_v6';
-
-const OLD_STUDENT_KEYS = [
-  'arya_ai_students_db',
-  'arya_ai_students_db_v1',
-  'arya_ai_students_db_v2',
-  'arya_ai_students_db_v3',
-  'arya_ai_students_db_v4',
-  'arya_ai_students_db_v5'
-];
+const DATASETS_STORAGE_KEY = 'arya_ai_student_datasets_v1';
 
 /**
  * Empty baseline student record structure for new accounts
@@ -59,20 +51,6 @@ export const INITIAL_STUDENTS: StudentRecord[] = [];
 export const SAMPLE_COHORT: StudentRecord[] = [];
 
 class StudentService {
-  constructor() {
-    this.purgeOldKeys();
-  }
-
-  private purgeOldKeys() {
-    OLD_STUDENT_KEYS.forEach((k) => {
-      try {
-        localStorage.removeItem(k);
-      } catch {
-        // ignore
-      }
-    });
-  }
-
   private getStorage(): StudentRecord[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -96,6 +74,156 @@ class StudentService {
 
   public getAllStudents(): StudentRecord[] {
     return this.getStorage();
+  }
+
+  public getDatasetsUploadedBy(uploadedById: string): StudentDataset[] {
+    try {
+      const datasets = JSON.parse(localStorage.getItem(DATASETS_STORAGE_KEY) || '[]') as StudentDataset[];
+      const students = this.getStorage();
+      return datasets
+        .filter((dataset) => dataset.uploadedById === uploadedById)
+        .map((dataset) => ({
+          ...dataset,
+          recordCount: students.filter((student) => student.datasetId === dataset.datasetId).length
+        }))
+        .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+    } catch {
+      return [];
+    }
+  }
+
+  public getDatasetById(datasetId: string): StudentDataset | null {
+    try {
+      const datasets = JSON.parse(localStorage.getItem(DATASETS_STORAGE_KEY) || '[]') as StudentDataset[];
+      return datasets.find((dataset) => dataset.datasetId === datasetId) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  public getStudentsInDataset(datasetId: string): StudentRecord[] {
+    return this.getStorage().filter((student) => student.datasetId === datasetId);
+  }
+
+  public createDatasetImport(
+    fileName: string,
+    uploadedBy: string,
+    uploadedById: string,
+    records: StudentRecord[]
+  ): StudentDataset {
+    const currentStudentsRaw = localStorage.getItem(STORAGE_KEY);
+    const currentStudents = currentStudentsRaw ? JSON.parse(currentStudentsRaw) as StudentRecord[] : [];
+    if (!Array.isArray(currentStudents)) throw new Error('Student records could not be read safely.');
+    const existingIds = new Set(currentStudents.map((student) => student.Student_ID.trim().toUpperCase()));
+    const batchIds = new Set<string>();
+    const duplicateIds: string[] = [];
+
+    for (const record of records) {
+      const studentId = record.Student_ID.trim().toUpperCase();
+      if (!studentId || existingIds.has(studentId) || batchIds.has(studentId)) duplicateIds.push(record.Student_ID);
+      batchIds.add(studentId);
+    }
+
+    if (duplicateIds.length > 0) {
+      throw new Error(`Student_ID already exists in another dataset or student record: ${duplicateIds.join(', ')}`);
+    }
+    if (records.length === 0) throw new Error('No valid student records to import.');
+
+    const datasetId = `dataset-${typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`}`;
+    const dataset: StudentDataset = {
+      datasetId,
+      fileName,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy,
+      uploadedById,
+      recordCount: records.length
+    };
+    const importedStudents = records.map((record) => ({
+      ...record,
+      datasetId,
+      UpdatedAt: new Date().toISOString()
+    }));
+    const storedDatasets = JSON.parse(localStorage.getItem(DATASETS_STORAGE_KEY) || '[]') as StudentDataset[];
+    const oldStudents = localStorage.getItem(STORAGE_KEY);
+    const oldDatasets = localStorage.getItem(DATASETS_STORAGE_KEY);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...currentStudents, ...importedStudents]));
+      localStorage.setItem(DATASETS_STORAGE_KEY, JSON.stringify([...storedDatasets, dataset]));
+    } catch (error) {
+      if (oldStudents === null) localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, oldStudents);
+      if (oldDatasets === null) localStorage.removeItem(DATASETS_STORAGE_KEY);
+      else localStorage.setItem(DATASETS_STORAGE_KEY, oldDatasets);
+      throw error;
+    }
+
+    return dataset;
+  }
+
+  public deleteDataset(datasetId: string, uploadedById: string): boolean {
+    let datasets: StudentDataset[];
+    try {
+      datasets = JSON.parse(localStorage.getItem(DATASETS_STORAGE_KEY) || '[]') as StudentDataset[];
+    } catch {
+      return false;
+    }
+    const target = datasets.find((dataset) => dataset.datasetId === datasetId && dataset.uploadedById === uploadedById);
+    if (!target) return false;
+
+    const oldStudents = localStorage.getItem(STORAGE_KEY);
+    const oldDatasets = localStorage.getItem(DATASETS_STORAGE_KEY);
+    let currentStudents: StudentRecord[];
+    try {
+      currentStudents = oldStudents ? JSON.parse(oldStudents) as StudentRecord[] : [];
+      if (!Array.isArray(currentStudents)) return false;
+    } catch {
+      return false;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentStudents.filter((student) => student.datasetId !== datasetId)));
+      localStorage.setItem(DATASETS_STORAGE_KEY, JSON.stringify(datasets.filter((dataset) => dataset.datasetId !== datasetId)));
+      return true;
+    } catch (error) {
+      if (oldStudents === null) localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, oldStudents);
+      if (oldDatasets === null) localStorage.removeItem(DATASETS_STORAGE_KEY);
+      else localStorage.setItem(DATASETS_STORAGE_KEY, oldDatasets);
+      throw error;
+    }
+  }
+
+  public isAssignedToFaculty(student: StudentRecord, faculty: User): boolean {
+    const assignedId = student.assignedFacultyId?.trim().toLowerCase();
+    if (assignedId) return assignedId === faculty.id.trim().toLowerCase();
+
+    const mentor = student.Mentor?.trim().toLowerCase();
+    return Boolean(mentor && [faculty.name, faculty.email, faculty.id]
+      .some((identity) => identity.trim().toLowerCase() === mentor));
+  }
+
+  public getStudentsForFaculty(faculty: User): StudentRecord[] {
+    const ownedDatasetIds = new Set(this.getDatasetsUploadedBy(faculty.id).map((dataset) => dataset.datasetId));
+    const availableStudents = this.getStorage().filter((student) =>
+      this.isAssignedToFaculty(student, faculty) || Boolean(student.datasetId && ownedDatasetIds.has(student.datasetId))
+    );
+    return this.uniqueStudents(availableStudents);
+  }
+
+  public getAssignedStudentsForFaculty(faculty: User): StudentRecord[] {
+    return this.uniqueStudents(this.getStorage().filter((student) => this.isAssignedToFaculty(student, faculty)));
+  }
+
+  private uniqueStudents(students: StudentRecord[]): StudentRecord[] {
+    const seenStudentIds = new Set<string>();
+    return students.filter((student) => {
+      const studentId = student.Student_ID.trim().toUpperCase();
+      if (!studentId || seenStudentIds.has(studentId)) return false;
+      seenStudentIds.add(studentId);
+      return true;
+    });
   }
 
   public getStudentById(studentId: string): StudentRecord | null {
@@ -172,26 +300,6 @@ class StudentService {
     return true;
   }
 
-  public importStudents(records: StudentRecord[]): { added: number; updated: number } {
-    const current = this.getStorage();
-    let added = 0;
-    let updated = 0;
-
-    for (const rec of records) {
-      const idx = current.findIndex((s) => s.Student_ID.toUpperCase() === rec.Student_ID.toUpperCase());
-      if (idx >= 0) {
-        current[idx] = { ...current[idx], ...rec, UpdatedAt: new Date().toISOString() };
-        updated++;
-      } else {
-        current.push({ ...rec, UpdatedAt: new Date().toISOString() });
-        added++;
-      }
-    }
-
-    this.saveStorage(current);
-    return { added, updated };
-  }
-
   public addMentoringNote(studentId: string, note: string): boolean {
     const student = this.getStudentById(studentId);
     if (!student) return false;
@@ -208,6 +316,7 @@ class StudentService {
 
   public resetToDefault(): void {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DATASETS_STORAGE_KEY);
   }
 }
 
