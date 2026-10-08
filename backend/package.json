@@ -1,0 +1,10 @@
+{
+  "name": "arya-ai-talentlink-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "node --import tsx src/server.ts"
+  }
+}

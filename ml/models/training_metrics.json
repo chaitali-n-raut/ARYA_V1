@@ -1,0 +1,204 @@
+{
+  "model_version": "kaggle-student-placement-8000-v3",
+  "selected_model": "extra_trees",
+  "dataset": "student_placement_train.csv",
+  "dataset_rows": 8000,
+  "dataset_features": [
+    "age",
+    "gender",
+    "cgpa",
+    "attendance_percentage",
+    "backlogs",
+    "coding_score",
+    "aptitude_score",
+    "communication_score",
+    "technical_score",
+    "projects_count",
+    "major_projects",
+    "internships_count",
+    "internship_months",
+    "certifications_count",
+    "hackathons_participated",
+    "hackathons_won",
+    "coding_platform_score",
+    "github_projects",
+    "linkedin_score",
+    "resume_score",
+    "soft_skills_score",
+    "leadership_score",
+    "extracurricular_score",
+    "training_hours",
+    "mock_interview_score",
+    "preferred_domain"
+  ],
+  "feature_count": 26,
+  "target": "placed",
+  "train_rows": 6400,
+  "test_rows": 1600,
+  "class_distribution": {
+    "0": 6370,
+    "1": 1630
+  },
+  "evaluation": {
+    "roc_auc": 0.5100933247296087,
+    "accuracy": 0.794375,
+    "precision": 0.2,
+    "recall": 0.003067484662576687,
+    "f1": 0.006042296072507553,
+    "classification_report": {
+      "0": {
+        "precision": 0.7962382445141066,
+        "recall": 0.9968602825745683,
+        "f1-score": 0.8853258975252701,
+        "support": 1274.0
+      },
+      "1": {
+        "precision": 0.2,
+        "recall": 0.003067484662576687,
+        "f1-score": 0.006042296072507553,
+        "support": 326.0
+      },
+      "accuracy": 0.794375,
+      "macro avg": {
+        "precision": 0.49811912225705335,
+        "recall": 0.49996388361857247,
+        "f1-score": 0.4456840967988888,
+        "support": 1600.0
+      },
+      "weighted avg": {
+        "precision": 0.6747547021943574,
+        "recall": 0.794375,
+        "f1-score": 0.7061718637292697,
+        "support": 1600.0
+      }
+    }
+  },
+  "candidate_models": {
+    "xgboost": {
+      "roc_auc": 0.5007415896986449,
+      "accuracy": 0.794375,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "random_forest": {
+      "roc_auc": 0.5074712754379713,
+      "accuracy": 0.795625,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "extra_trees": {
+      "roc_auc": 0.5100933247296087,
+      "accuracy": 0.794375,
+      "precision": 0.2,
+      "recall": 0.003067484662576687,
+      "f1": 0.006042296072507553
+    }
+  },
+  "top_feature_importance": [
+    {
+      "feature": "numeric__extracurricular_score",
+      "importance": 0.039317180864131045
+    },
+    {
+      "feature": "numeric__mock_interview_score",
+      "importance": 0.03923850797617562
+    },
+    {
+      "feature": "numeric__aptitude_score",
+      "importance": 0.03907796291840487
+    },
+    {
+      "feature": "numeric__technical_score",
+      "importance": 0.03905767336057783
+    },
+    {
+      "feature": "numeric__github_projects",
+      "importance": 0.03901410454035264
+    },
+    {
+      "feature": "numeric__internship_months",
+      "importance": 0.03879586342322451
+    },
+    {
+      "feature": "numeric__communication_score",
+      "importance": 0.03866761754534045
+    },
+    {
+      "feature": "numeric__cgpa",
+      "importance": 0.03853139892724678
+    },
+    {
+      "feature": "numeric__coding_score",
+      "importance": 0.03834041354548899
+    },
+    {
+      "feature": "numeric__soft_skills_score",
+      "importance": 0.03815979546643104
+    },
+    {
+      "feature": "numeric__certifications_count",
+      "importance": 0.03813787081441677
+    },
+    {
+      "feature": "numeric__age",
+      "importance": 0.03809125903422618
+    },
+    {
+      "feature": "numeric__coding_platform_score",
+      "importance": 0.038073894567911146
+    },
+    {
+      "feature": "numeric__hackathons_participated",
+      "importance": 0.03788577546015152
+    },
+    {
+      "feature": "numeric__attendance_percentage",
+      "importance": 0.037873833496311245
+    },
+    {
+      "feature": "numeric__projects_count",
+      "importance": 0.03784743391683453
+    },
+    {
+      "feature": "numeric__leadership_score",
+      "importance": 0.03781207154988418
+    },
+    {
+      "feature": "numeric__resume_score",
+      "importance": 0.03738407904168063
+    },
+    {
+      "feature": "numeric__training_hours",
+      "importance": 0.03719422909282356
+    },
+    {
+      "feature": "numeric__major_projects",
+      "importance": 0.03640499520105571
+    },
+    {
+      "feature": "numeric__linkedin_score",
+      "importance": 0.03620933432688545
+    },
+    {
+      "feature": "numeric__internships_count",
+      "importance": 0.03505439743634161
+    },
+    {
+      "feature": "numeric__backlogs",
+      "importance": 0.03328194994639887
+    },
+    {
+      "feature": "numeric__hackathons_won",
+      "importance": 0.022078809930446055
+    },
+    {
+      "feature": "categorical__preferred_domain_Software Development",
+      "importance": 0.017124655968337277
+    }
+  ],
+  "source_note": "Real Kaggle Binary Classification of Student Placement Outcomes training dataset supplied by the project owner. 8,000 training rows; 27 predictive features. No synthetic training rows were added. The model is evaluated on a stratified 20% holdout; metrics are reported honestly and are not claims of production generalization.",
+  "roc_auc": 0.5100933247296087,
+  "accuracy": 0.794375
+}

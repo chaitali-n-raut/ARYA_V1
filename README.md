@@ -1,202 +1,53 @@
-# ARYA AI
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-### Academic Readiness & Youth Analytics AI
+# Run and deploy your AI Studio app
 
-> An AI-driven academic and career intelligence platform designed to help students understand their potential, identify skill gaps, improve career readiness, and connect with relevant opportunities.
+This contains everything you need to run your app locally.
 
----
+View your app in AI Studio: https://ai.studio/apps/61256105-feea-44c8-8971-2a5d22aeabe3
 
-## 📌 About ARYA AI
+## Run Locally
 
-**ARYA AI (Academic Readiness & Youth Analytics AI)** is a student-focused career intelligence platform developed to support students, faculty, Training & Placement (T&P) teams, recruiters, mentors, and university administrators.
+**Prerequisites:**  Node.js
 
-The platform brings together academic and professional student information such as:
 
-- Academic performance
-- Attendance
-- Technical skills
-- Certifications
-- Internships
-- Projects
-- Coding experience
-- Communication abilities
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
 
-Using this information, ARYA AI is designed to provide:
+## Data model & roles (TalentLink update)
 
-- Placement readiness insights
-- Explainable AI-based recommendations
-- Skill-gap analysis
-- Career-path recommendations
-- Personalized learning roadmaps
-- Placement opportunity support
-- Recruiter candidate filtering and matching
-- Institutional placement analytics
+All application data is persisted by the backend in `backend/data/db.json`; the browser is not used as the application database. No demo data ships with the app.
 
-The goal is to help students move from **"Where do I stand?"** to **"What should I do next?"**
+- **T&P Officer** creates / edits / deletes drives, publishes or unpublishes them (drafts are invisible to students), and moves applications through *Applied → Under Review → Shortlisted → Interview → Selected / Rejected*.
+- **Student** sees only published drives, with eligibility computed from their own profile (CGPA, branch, graduation year, backlogs) and applies once per drive.
+- **Faculty/Mentor** sees only students whose `Mentor` / `Mentor_Email` maps to them (blank mentor in a CSV = the uploader) and those students' applications (read-only).
+- **CSV imports** are separate batches (`BATCH-001`, …). Each student record carries `Import_Batch_ID`; *Delete CSV* removes only that batch. Duplicate `Student_ID`s are skipped, never overwritten.
+- **Start with Clean Slate** (T&P header) wipes students, imports, drives, applications and notifications, but keeps accounts and roles.
+- The frontend uses an in-memory cache only. Authentication is maintained by an HttpOnly server cookie, while persistent application data lives in the backend tenant-scoped database.
 
----
+## Institution-aware registration and branding
 
-## 🎯 Objectives
+ARYA now uses three registration paths:
 
-ARYA AI aims to:
+1. **Register as Student / Faculty** — joins an already registered institution.
+2. **Register Your Institution** — creates a new isolated college tenant and its first T&P account.
+3. **Sign In** — existing users select their institution when needed and open their role workspace.
 
-- Analyze student academic and professional profiles.
-- Estimate student placement and career readiness.
-- Identify important skill gaps.
-- Provide explainable insights behind readiness predictions.
-- Recommend suitable career paths.
-- Generate personalized learning roadmaps.
-- Support recruiters in filtering and ranking candidates.
-- Help Training & Placement teams monitor student readiness.
-- Provide meaningful analytics for academic institutions.
+After authentication, protected workspaces display the authenticated institution name from the backend tenant record. The college name is not hardcoded in the frontend.
 
----
+## Gemini AI integration
 
-## 👥 User Roles
+The backend already includes Google Gemini integration through `@google/genai`. The flow is:
 
-### 🎓 Student
+`student profile -> local ML prediction -> grounded prompt -> Gemini -> AI coaching`
 
-Students can:
+Set `GEMINI_API_KEY` in `backend/.env`. The key stays on the backend and is never placed in React/browser code.
 
-- Create and manage their profile.
-- View academic and professional information.
-- Monitor placement readiness.
-- Understand their strengths and weaknesses.
-- Explore career paths.
-- Identify skill gaps.
-- Follow personalized learning roadmaps.
-- Track placement opportunities and applications.
-- Upload resumes.
 
-### 👨‍🏫 Faculty / Mentor
-
-Faculty and mentors can:
-
-- Monitor student progress.
-- Review student profiles.
-- Analyze academic and readiness information.
-- Support students with career guidance.
-
-### 🏢 Training & Placement (T&P)
-
-T&P teams can:
-
-- Monitor overall student readiness.
-- Analyze placement-related information.
-- Manage placement opportunities.
-- Review candidate eligibility.
-- Track placement analytics.
-
-### 💼 Recruiter
-
-Recruiters can:
-
-- Define candidate requirements.
-- Apply eligibility filters.
-- Review candidate profiles.
-- Rank suitable candidates.
-- Identify relevant student talent.
-
-### 🏛️ University Admin
-
-Administrators can:
-
-- Monitor institutional analytics.
-- Manage platform-level information.
-- View student and placement insights.
-- Support university-level decision making.
-
----
-
-## 🧠 Core Intelligence
-
-ARYA AI is designed around multiple intelligence modules.
-
-### 📊 Placement Readiness
-
-The system analyzes student attributes to provide a readiness indication based on available academic and professional information.
-
-### 🔍 Explainable AI
-
-The platform is designed to explain the factors contributing to a student's readiness result rather than presenting only a prediction.
-
-The research design includes:
-
-- SHAP
-- LIME
-
-These approaches can be used to understand the contribution of features such as:
-
-- CGPA
-- Attendance
-- Projects
-- Certifications
-- Coding activity
-- Communication score
-
-### 🧩 Skill Gap Analysis
-
-ARYA AI compares a student's existing skills with the requirements of a target career path or opportunity and identifies areas that require improvement.
-
-### 🧭 Career Intelligence
-
-The platform provides career-oriented insights including:
-
-- Career path recommendations
-- Skill-gap identification
-- Learning recommendations
-- Personalized roadmaps
-- Salary-band estimation where applicable
-
-### 🤝 Recruiter Matching
-
-Recruiters can first apply eligibility criteria such as:
-
-- CGPA
-- Backlogs
-- Branch
-
-Eligible candidates can then be ranked using relevant readiness and profile information.
-
----
-
-## 🏗️ System Architecture
-
-```text
-                    ┌───────────────────────┐
-                    │       ARYA AI          │
-                    │   Web Application      │
-                    └───────────┬───────────┘
-                                │
-             ┌──────────────────┼──────────────────┐
-             │                  │                  │
-             ▼                  ▼                  ▼
-        Student            Faculty / T&P       Recruiter
-        Dashboard           Dashboard           Portal
-             │                  │                  │
-             └──────────────────┼──────────────────┘
-                                │
-                                ▼
-                     ┌────────────────────┐
-                     │   Backend / APIs   │
-                     └─────────┬──────────┘
-                               │
-                 ┌─────────────┼─────────────┐
-                 │             │             │
-                 ▼             ▼             ▼
-              Student      Placement      Profile
-               Data          Data          Data
-                 │
-                 ▼
-          ┌────────────────────┐
-          │   AI / ML Engine   │
-          └─────────┬──────────┘
-                    │
-        ┌───────────┼────────────┐
-        ▼           ▼            ▼
-    Readiness    Explainability  Career
-    Prediction    SHAP/LIME      Intelligence
-        │           │            │
-        └───────────┼────────────┘
-                    ▼
-           Personalized Insights
+### Institution verification
+New colleges now follow a controlled onboarding flow: registration request -> Platform Admin review -> approval -> one-time T&P invitation -> invitation acceptance -> active tenant. A visitor cannot immediately create an active college workspace.

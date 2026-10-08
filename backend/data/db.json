@@ -1,0 +1,539 @@
+{
+  "tenants": [
+    {
+      "id": "tenant_1791392735104_40df2819",
+      "name": "geeta public school",
+      "slug": "geeta-public-school",
+      "collegeCode": "ARYA-A6FB1F",
+      "status": "pending_tnp",
+      "settings": {},
+      "createdAt": "2026-10-07T17:08:17.108Z",
+      "approvedAt": "2026-10-07T17:08:17.108Z",
+      "approvedBy": "usr_1791389355050_13610a5e"
+    },
+    {
+      "id": "tenant_1791395764129_09f0d709",
+      "name": "demo1",
+      "collegeCode": "ARYA-CB6B53",
+      "slug": "demo1",
+      "status": "active",
+      "settings": {},
+      "createdAt": "2026-10-07T17:56:04.129Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr_1791395764130_3a8ef34d",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "name": "ganesh",
+      "email": "12@gmail.com",
+      "role": "tnp",
+      "passwordHash": "01c4fca2de0e5731a904f901d627dbad:ea6ba422fce93dff761ec820369c959f118fe51e707355c06e209c6127e65737ab5f4efb138926ea416adc491ad2e324631a12498d480716b89e1047a5594321",
+      "department": "Computer Science and Engineering",
+      "designation": "Training & Placement Officer",
+      "organization": "demo1",
+      "createdAt": "2026-10-07T17:56:04.223Z"
+    },
+    {
+      "id": "usr_1791395904067_8011e8af",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "name": "rutuja",
+      "email": "13@gmail.com",
+      "role": "student",
+      "passwordHash": "f78c596306f8058cc8d824f214cb9516:7be74b4a4ab535d3702e65a2bb8262b1e67bc7479f3582ec70a34113992375f3d46b7dac03d0cd5ee82d2a501d4a1581bb19246a21556340519d526de738c7cf",
+      "studentId": "58",
+      "department": "Computer Science and Engineering",
+      "organization": "demo1",
+      "createdAt": "2026-10-07T17:58:24.170Z"
+    }
+  ],
+  "students": [
+    {
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "Student_ID": "58",
+      "Full_Name": "rutuja",
+      "Email": "rutujakadam3050@gmail.com",
+      "Phone": "2026011712341",
+      "College": "demo1",
+      "Department": "Computer Science and Engineering",
+      "Branch": "Computer Science and Engineering",
+      "Year": 4,
+      "Section": "A",
+      "Graduation_Year": 2026,
+      "CGPA": 9.01,
+      "Attendance_Percentage": 0,
+      "Backlogs": 0,
+      "Semester_Grades": [],
+      "Technical_Skills": [
+        "JavaScript",
+        "Java",
+        "C",
+        "Go",
+        "Google Cloud",
+        "Data Structures & Algorithms"
+      ],
+      "Certifications": [],
+      "Internships": [
+        "/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)"
+      ],
+      "Projects": [],
+      "Coding_Activity": {
+        "platform": "LeetCode",
+        "problemsSolved": 0,
+        "contestRating": 0,
+        "leetcodeSolved": 0,
+        "leetcodeRating": 0,
+        "codechefSolved": 0,
+        "codechefRating": 0
+      },
+      "Aptitude_Score": 0,
+      "Communication_Score": 0,
+      "Class_Teacher": "",
+      "Mentor": "",
+      "Location": "",
+      "Target_Role": "Software Engineer",
+      "Bio": "PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.",
+      "Mentorship_Notes": [],
+      "isProfileCompleted": true,
+      "ResumeUploaded": true,
+      "UpdatedAt": "2026-10-07T19:00:41.645Z",
+      "ResumeFileName": "Rutuja Kadam Resume.pdf"
+    }
+  ],
+  "drives": [],
+  "applications": [],
+  "notifications": [],
+  "aiRuns": [
+    {
+      "id": "ai_1791397714773_7aa9a102",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:28:34.774Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791397741192_7b236087",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:29:01.192Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791397770885_9c05a78b",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:29:30.885Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398050040_c2addde6",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:34:10.040Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398083544_52f77a11",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:34:43.545Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398141384_a6dd43cc",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:35:41.384Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "### Assessment\n* **Placement Readiness Status:** High Academic Potential / Critical Profile Deficit (Model: 29% probability, Not Placed, 42% confidence).\n* **Summary:** The student possesses a standout academic foundation (9.01 CGPA, 0 backlogs, CSE Year 4) and notable recognition as an Amazon Future Engineer Scholar. However, the local model heavily penalizes the candidate due to zeroed-out practical validation markers: 0 logged projects, 0 coding activity metrics, and 0 aptitude/communication scores. The low model confidence (42%) reflects these conflicting signals—elite academic tier vs. absolute zero in recorded execution.\n\n---\n\n### Why\n1. **Unparsed or Missing Project Data:** The `Projects` list is completely empty, though a resume (`Rutuja Kadam Resume.pdf`) is attached. *Uncertainty Notice:* It is unclear whether the candidate lacks technical projects or if resume parsing failed (indicated by the `Full_Name` field parsing as `\"PDF.\"`). Without documented SWE projects, applicant tracking systems (ATS) and placement algorithms default to rejection.\n2. **Zero Verifiable Coding Activity:** For a target Software Engineer role, recorded platforms show 0 LeetCode/CodeChef problems solved and a 0 rating. \n3. **Missing Assessment Scores:** Both `Aptitude_Score` and `Communication_Score` are logged at 0, which directly depresses tabular placement model scores.\n4. **Data Artifacts:** Recorded attendance of 0% and generic name extraction (`PDF.`) indicate platform sync issues that negatively bias automated screening pipelines.\n\n---\n\n### Priority Actions\n1. **Fix Profile & Extract Resume Assets:** Correct account name to Rutuja Kadam. Manually populate the `Projects` section with 2–3 capstone/technical projects from the uploaded resume, detailing tech stacks (e.g., Java, Go, GCP) and measurable outcomes.\n2. **Benchmark Aptitude & Communication:** Complete the platform’s internal diagnostic tests immediately to replace the \"0\" baseline with actual scores.\n3. **Verify Coding Metrics:** Link active coding accounts (LeetCode, HackerRank, or GitHub) to populate real problem counts and contest ratings for DSA validation.\n\n---\n\n### 30-Day Plan\n\n#### **Week 1: Data Normalization & Diagnostics**\n* Correct platform parsing issues (Name, projects, attendance verification).\n* Document at least 2 key software projects (architecture, tech stack, GitHub links).\n* Take platform-standard diagnostic tests for Quantitative Aptitude, Logical Reasoning, and Verbal Communication.\n\n#### **Week 2: DSA Core & Coding Footprint**\n* Map skills (Java/Go, Data Structures & Algorithms) to an active coding platform.\n* Solve 20 medium-difficulty problems focusing on Arrays, Strings, Hashing, and Two Pointers.\n* Ensure profile tracking captures at least 25+ verified solved problems.\n\n#### **Week 3: Advanced DSA & Core Computer Science**\n* Solve 15 medium-difficulty problems covering Trees, Graphs, and Dynamic Programming.\n* Revise CS Fundamentals: OS, DBMS, Computer Networks, and Cloud concepts (Google Cloud).\n* Conduct 1 timed aptitude sectional test every two days (target: >75th percentile).\n\n#### **Week 4: SWE Interview Readiness & Review**\n* Re-run ARYA platform placement evaluation with populated projects and diagnostic scores.\n* Complete 2 full-length SWE mock interviews (1 technical/coding, 1 behavioral/Amazon Leadership Principles).\n* Refine project narrative around the Amazon Future Engineer program and Go/Java implementations."
+    },
+    {
+      "id": "ai_1791398185008_acea2cae",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:36:25.008Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398264281_2cca4bd7",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:37:44.281Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "### Assessment\nThe local model's **29% placement probability (Not Placed)** is heavily distorted by missing or unrecorded profile data. Academically, the profile is strong with a **9.01 CGPA**, zero backlogs, and recognition as an **Amazon Future Engineer Scholar** (top 500 of 8,000). However, critical placement screening parameters—specifically aptitude scores, communication evaluations, coding activity, and projects—are recorded as zero or null, driving the prediction down.\n\n---\n\n### Why the Model Predicts \"Not Placed\"\n1. **Zeroed Technical & Assessment Metrics:** Aptitude (`0`), Communication (`0`), and LeetCode/CodeChef solved counts (`0`) flag the profile as unprepared in automated filtering algorithms.\n2. **Missing Portfolio Evidence:** The `Projects` list is completely empty (`[]`). *Uncertainty note:* While a resume (\"Rutuja Kadam Resume.pdf\") is attached, the platform has zero parsed project entries to substantiate claimed skills in Go, Java, and Google Cloud.\n3. **Data Anomalies:** `Attendance_Percentage: 0` acts as a negative weight in institutional placement models.\n\n---\n\n### Priority Actions\n1. **Baseline Assessment Testing:** Complete ARYA’s internal Aptitude and Communication benchmarks immediately to replace the `0` placeholders.\n2. **Sync Active Coding Profiles:** Link active LeetCode/HackerRank handles with verified problem counts in Data Structures & Algorithms.\n3. **Populate Technical Projects:** Extract and formally log 2–3 completed projects from the uploaded resume into the platform, explicitly detailing tech stacks (e.g., Go, GCP, Java).\n4. **Administrative Correction:** Contact the department administrator to resolve the `0%` attendance flag if this is a logging error.\n\n---\n\n### 30-Day Plan\n\n* **Week 1: Data Rectification & Baseline Testing**\n  * Update platform profile: populate the `Projects` section with 2 detailed entries from your resume (problem statement, architecture, GitHub links).\n  * Take institutional Aptitude and Verbal/Communication mock diagnostics to establish baseline scores above 75%.\n  * Verify and sync competitive coding handles.\n\n* **Week 2: Core DSA & Coding Verification**\n  * Target 30 medium-difficulty DSA problems on LeetCode covering Arrays, Strings, HashMaps, and Linked Lists in your primary language (Java/Go).\n  * Ensure solved metrics synchronize to your ARYA profile to establish verified coding competence.\n\n* **Week 3: Advanced DSA & Core CS Fundamentals**\n  * Solve 20 medium problems focusing on Trees, Graphs, and Dynamic Programming.\n  * Revise core Computer Science fundamentals: OS (concurrency, threads), DBMS (indexing, SQL), and Computer Networks.\n\n* **Week 4: Mock Assessments & Role Alignment**\n  * Complete 2 full-length, timed campus placement simulation tests (Aptitude + Technical MCQs + 2 Coding questions).\n  * Prepare talking points specifically framing the Amazon Future Engineer scholarship experience and system architecture of your top project for Software Engineer interviews."
+    },
+    {
+      "id": "ai_1791398438663_773ebbc0",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:40:38.664Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398458726_16d87a94",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:40:58.726Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398615397_82e53444",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:43:35.397Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.2897798905699558,
+        "prediction": "Not Placed",
+        "confidence": 0.4204402188600884,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "ai_1791398660966_0bce761b",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:44:20.966Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "prompt": "You are the external reasoning layer for ARYA AI TalentLink, a college placement-readiness platform.\n\nA locally trained placement model, trained on Kaggle's Binary Classification of Student Placement Outcomes dataset (8,000 training rows), has already analyzed this student.\n\nLOCAL MODEL OUTPUT:\n- placement probability: 29%\n- prediction: Not Placed\n- model confidence: 42%\n\nSTUDENT PROFILE:\n{\n  \"tenantId\": \"tenant_1791395764129_09f0d709\",\n  \"Student_ID\": \"58\",\n  \"Full_Name\": \"PDF.\",\n  \"Email\": \"rutujakadam3050@gmail.com\",\n  \"Phone\": \"2026011712341\",\n  \"College\": \"demo1\",\n  \"Department\": \"Computer Science and Engineering\",\n  \"Branch\": \"Computer Science and Engineering\",\n  \"Year\": 4,\n  \"Section\": \"A\",\n  \"Graduation_Year\": 2026,\n  \"CGPA\": 9.01,\n  \"Attendance_Percentage\": 0,\n  \"Backlogs\": 0,\n  \"Semester_Grades\": [],\n  \"Technical_Skills\": [\n    \"JavaScript\",\n    \"Java\",\n    \"C\",\n    \"Go\",\n    \"Google Cloud\",\n    \"Data Structures & Algorithms\"\n  ],\n  \"Certifications\": [],\n  \"Internships\": [\n    \"/E (Selected among the 500 final scholars in Amazon Future Engineer Program from a pool of 8000 applicants  based on my academic excellence and merits.)\"\n  ],\n  \"Projects\": [],\n  \"Coding_Activity\": {\n    \"platform\": \"LeetCode\",\n    \"problemsSolved\": 0,\n    \"contestRating\": 0,\n    \"leetcodeSolved\": 0,\n    \"leetcodeRating\": 0,\n    \"codechefSolved\": 0,\n    \"codechefRating\": 0\n  },\n  \"Aptitude_Score\": 0,\n  \"Communication_Score\": 0,\n  \"Class_Teacher\": \"\",\n  \"Mentor\": \"\",\n  \"Location\": \"\",\n  \"Target_Role\": \"Software Engineer\",\n  \"Bio\": \"PDF. is an undergraduate student in Computer Science & Engineering with proficiencies in JavaScript, Java, C, Go.\",\n  \"Mentorship_Notes\": [],\n  \"isProfileCompleted\": true,\n  \"ResumeUploaded\": true,\n  \"UpdatedAt\": \"2026-10-07T18:00:50.521Z\",\n  \"ResumeFileName\": \"Rutuja Kadam Resume.pdf\"\n}\n\nTASK:\nGive evidence-grounded placement coaching. Do not invent achievements. Identify the most actionable gaps from the available profile and give a 30-day improvement plan. State uncertainty when project data is incomplete.\nReturn concise sections: Assessment, Why, Priority Actions, 30-Day Plan.",
+      "provider": "gemini",
+      "externalResponse": "AI guidance is temporarily unavailable. Please try again later."
+    },
+    {
+      "id": "guidance_1791399499123_59c9e520",
+      "tenantId": "tenant_1791395764129_09f0d709",
+      "createdAt": "2026-10-07T18:58:19.123Z",
+      "studentId": "58",
+      "localModel": {
+        "model_version": "kaggle-student-placement-8000-v3",
+        "placement_probability": 0.28977989056995573,
+        "prediction": "Not Placed",
+        "confidence": 0.42044021886008853,
+        "priority_features": [
+          "numeric__extracurricular_score",
+          "numeric__mock_interview_score",
+          "numeric__aptitude_score",
+          "numeric__technical_score",
+          "numeric__github_projects",
+          "numeric__internship_months",
+          "numeric__communication_score"
+        ],
+        "dataset_rows": 8000,
+        "dataset_features": 26,
+        "roc_auc": 0.5100933247296087,
+        "accuracy": 0.794375,
+        "selected_model": "extra_trees"
+      },
+      "guidance": [
+        {
+          "id": "projects",
+          "title": "Build your project portfolio",
+          "description": "Practical projects provide evidence of your ability to apply technical knowledge.",
+          "priority": "High",
+          "action": "Complete at least one end-to-end project related to your target role and document your contribution clearly.",
+          "category": "Projects"
+        },
+        {
+          "id": "coding",
+          "title": "Increase coding practice",
+          "description": "More structured problem-solving practice can improve technical interview preparation.",
+          "priority": "High",
+          "action": "Follow a regular DSA practice schedule and focus on arrays, strings, hash maps, recursion, sorting, searching, and common interview patterns.",
+          "category": "Coding"
+        },
+        {
+          "id": "communication",
+          "title": "Improve interview communication",
+          "description": "Clear communication is important during technical and behavioral interviews.",
+          "priority": "High",
+          "action": "Practice explaining projects, technical decisions, strengths, weaknesses, and common behavioral questions aloud.",
+          "category": "Communication"
+        },
+        {
+          "id": "resume",
+          "title": "Strengthen your resume",
+          "description": "Your resume should clearly communicate your strongest skills and measurable project outcomes.",
+          "priority": "Medium",
+          "action": "Use concise achievement-focused bullets and highlight your strongest projects, skills, certifications, and practical experience.",
+          "category": "Resume"
+        },
+        {
+          "id": "certifications",
+          "title": "Add relevant certifications",
+          "description": "Relevant certifications can provide additional evidence of structured learning.",
+          "priority": "Low",
+          "action": "Complete one certification that directly supports your target role rather than collecting unrelated credentials.",
+          "category": "Certifications"
+        }
+      ],
+      "summary": "Your profile is at an early preparation stage. Focus first on the high-priority areas below and build progress consistently.",
+      "provider": "local"
+    }
+  ],
+  "importBatches": [],
+  "sessions": [
+    {
+      "token": "b9306a03200b4a31b40b88d3dbed4a21f7ef67dbb5a0c934c439668745f844d1",
+      "userId": "usr_1791395764130_3a8ef34d",
+      "expiresAt": 1792000607555
+    },
+    {
+      "token": "84b70f2b364fd70d1bde057acce56ef06f278703839535c09c3547a082eaf788",
+      "userId": "usr_1791395904067_8011e8af",
+      "expiresAt": 1792000767507
+    }
+  ]
+}
